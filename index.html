@@ -284,15 +284,15 @@ window.addEventListener('beforeunload',function(){try{localStorage.setItem(KEY,J
 function clone(x){return JSON.parse(JSON.stringify(x));}
 function snap(c){return{metadata:{fromCache:false},docs:Object.keys(data[c]).map(function(id){return{id:id,data:function(){return clone(data[c][id]);}};})};}
 function emit(c){(subs[c]||[]).slice().forEach(function(cb){try{cb(snap(c));}catch(e){console.error(e);}});}
-window.addEventListener('storage',function(e){if(e.key===KEY){load();COLLS.forEach(emit);}});
+window.addEventListener('storage',function(e){if(e.key===KEY){load();loadMeta();COLLS.forEach(emit);}});
 var db={collection:function(c){
   if(!data[c])data[c]={};
   return{
     onSnapshot:function(cb){(subs[c]=subs[c]||[]).push(cb);setTimeout(function(){cb(snap(c));},0);return function(){subs[c]=(subs[c]||[]).filter(function(f){return f!==cb;});};},
     doc:function(id){return{
-      set:function(x){data[c][id]=clone(x);persist();emit(c);return Promise.resolve();},
-      update:function(x){if(!data[c][id])return Promise.reject(new Error('not-found'));data[c][id]=Object.assign({},data[c][id],clone(x));persist();emit(c);return Promise.resolve();},
-      delete:function(){delete data[c][id];persist();emit(c);return Promise.resolve();}
+      set:function(x){data[c][id]=clone(x);touch(c,id);persist();emit(c);return Promise.resolve();},
+      update:function(x){if(!data[c][id])return Promise.reject(new Error('not-found'));data[c][id]=Object.assign({},data[c][id],clone(x));touch(c,id);persist();emit(c);return Promise.resolve();},
+      delete:function(){delete data[c][id];tomb(c,id);persist();emit(c);return Promise.resolve();}
     };}
   };
 }};
@@ -383,6 +383,90 @@ function fetchEvents(days,interactive){
   });
 }
 window.__GSYNC={cfg:cfg,setCfg:setCfg,configured:function(){return !!cfg().clientId;},fetch:fetchEvents,calendars:calendars};
+
+// ---- synchronisation entre appareils (fichier sur l'hébergement de l'utilisateur)
+var SKEY='pdm-sync',MKEY='pdm-sync-meta',SYNCED=['items','quotas','reviews','profile','wins','budget','revues','models'];
+var meta={mt:{},del:{},last:0,dirty:false},sst={state:'off',msg:''},sbusy=false,curP=null,sptmr=0,slist=[];
+function loadMeta(){var m={};try{m=JSON.parse(localStorage.getItem(MKEY)||'{}')||{};}catch(e){m={};}
+  m.mt=m.mt||{};m.del=m.del||{};m.last=m.last||0;m.dirty=!!m.dirty;SYNCED.forEach(function(c){m.mt[c]=m.mt[c]||{};m.del[c]=m.del[c]||{};});meta=m;}
+function saveMeta(){try{localStorage.setItem(MKEY,JSON.stringify(meta));}catch(e){}}
+loadMeta();
+function scfg(){try{return JSON.parse(localStorage.getItem(SKEY)||'{}')||{};}catch(e){return{};}}
+function ssetCfg(o){try{localStorage.setItem(SKEY,JSON.stringify(Object.assign(scfg(),o)));}catch(e){}}
+function sconf(){var c=scfg();return !!(c.url&&c.key);}
+function setSt(state,msg){sst={state:state,msg:msg||''};slist.slice().forEach(function(f){try{f(sst);}catch(e){}});}
+function hhmm(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return p(d.getHours())+':'+p(d.getMinutes());}
+function isSynced(c){return SYNCED.indexOf(c)>=0;}
+function touch(c,id){if(!isSynced(c))return;meta.mt[c][id]=Date.now();delete meta.del[c][id];meta.dirty=true;saveMeta();schedulePush(1500);}
+function tomb(c,id){if(!isSynced(c))return;delete meta.mt[c][id];meta.del[c][id]=Date.now();meta.dirty=true;saveMeta();schedulePush(1500);}
+function schedulePush(ms){if(!sconf())return;clearTimeout(sptmr);sptmr=setTimeout(function(){syncNow().catch(function(){});},ms);}
+function stamp(){var t=Date.now();SYNCED.forEach(function(c){Object.keys(data[c]||{}).forEach(function(id){if(!meta.mt[c][id]&&!meta.del[c][id]){meta.mt[c][id]=t;meta.dirty=true;}});});}
+function merge(R){
+  var B=(R&&R.body)||{},rD=B.data||{},rM=B.mt||{},rX=B.del||{},changed=false,push=false,cut=Date.now()-90*86400000;
+  SYNCED.forEach(function(c){
+    var rd=rD[c]||{},rm=rM[c]||{},rx=rX[c]||{},ids={};
+    [rd,rm,rx,data[c],meta.mt[c],meta.del[c]].forEach(function(o){Object.keys(o||{}).forEach(function(k){ids[k]=1;});});
+    Object.keys(ids).forEach(function(id){
+      var lt=meta.mt[c][id]||0,ld=meta.del[c][id]||0,rt=rm[id]||0,rdl=rx[id]||0,hasL=!!data[c][id],hasR=!!rd[id];
+      var wT=Math.max(lt,rt),dT=Math.max(ld,rdl);
+      if(dT>0&&dT>=wT){
+        if(hasL){delete data[c][id];changed=true;}
+        delete meta.mt[c][id];
+        if(dT>cut){meta.del[c][id]=dT;if(rdl<dT)push=true;}else{delete meta.del[c][id];}
+        if(hasR&&rt<=dT)push=true;
+      }else if(wT>0){
+        if(rt>lt&&hasR){data[c][id]=rd[id];meta.mt[c][id]=rt;delete meta.del[c][id];changed=true;}
+        else if(hasL){meta.mt[c][id]=lt;if(lt>rt||!hasR)push=true;}
+      }else if(!hasL&&hasR){data[c][id]=rd[id];meta.mt[c][id]=1;changed=true;}
+    });
+  });
+  return{changed:changed,push:push};
+}
+function shttp(method,body){
+  var c=scfg();
+  return fetch(c.url,{method:method,headers:{'X-PDM-Key':c.key,'Content-Type':'text/plain'},body:body,cache:'no-store'}).then(function(r){
+    if(r.status===401||r.status===403)throw{code:'key'};
+    if(r.status===409)return r.json().then(function(j){return{conflict:true,cur:j};});
+    if(r.status===404)throw{code:'notfound'};
+    if(!r.ok)throw{code:'http_'+r.status};
+    return r.json().catch(function(){throw{code:'badjson'};});
+  },function(){throw{code:'offline'};});
+}
+function pack(base){var d={};SYNCED.forEach(function(c){d[c]=data[c]||{};});return JSON.stringify({base:base,data:d,mt:meta.mt,del:meta.del});}
+function cycle(R,n){
+  if(!R||typeof R.updatedAt!=='number')throw{code:'badjson'};
+  if(n===0&&R.updatedAt===meta.last&&!meta.dirty&&R.updatedAt>0)return Promise.resolve();
+  var m=merge(R);
+  if(m.changed){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}SYNCED.forEach(emit);}
+  if(!m.push&&!meta.dirty){meta.last=R.updatedAt;saveMeta();return Promise.resolve();}
+  return shttp('POST',pack(R.updatedAt)).then(function(r){
+    if(r.conflict){if(n>=3)throw{code:'conflict'};return cycle(r.cur,n+1);}
+    meta.last=r.updatedAt;meta.dirty=false;saveMeta();
+  });
+}
+function syncNow(){
+  if(!sconf())return Promise.reject({code:'no_cfg'});
+  if(sbusy){return curP.then(function(){},function(){}).then(function(){return syncNow();});}
+  sbusy=true;setSt('busy','Synchronisation…');stamp();
+  curP=shttp('GET').then(function(R){return cycle(R,0);}).then(function(){
+    sbusy=false;setSt('ok','Synchronisé à '+hhmm()+'.');
+  },function(e){sbusy=false;setSt('err',smsg(e));throw e;});
+  return curP;
+}
+function smsg(e){var c=e&&e.code;
+  if(c==='key')return 'La clé est refusée. Vérifie qu’elle est identique à celle du fichier sur ton hébergement.';
+  if(c==='offline')return 'Hors connexion, ou adresse inaccessible (le fichier est-il bien en ligne ? l’adresse est-elle exacte ?). Tes données restent sur cet appareil et partiront dès que ça marchera.';
+  if(c==='notfound')return 'Fichier introuvable à cette adresse.';
+  if(c==='badjson')return 'L’adresse répond, mais ce n’est pas le fichier de synchronisation.';
+  if(c==='conflict')return 'Un autre appareil écrit en même temps. Réessaie dans un instant.';
+  if(c==='no_cfg')return 'Renseigne l’adresse et la clé.';
+  return 'Synchronisation impossible ('+(c||'erreur')+').';}
+window.__SYNC={cfg:scfg,setCfg:function(o){ssetCfg(o);if(!sconf())setSt('off','');},configured:sconf,now:syncNow,status:function(){return sst;},onStatus:function(f){slist.push(f);}};
+function pull(){if(sconf()&&!sbusy&&document.visibilityState!=='hidden')syncNow().catch(function(){});}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')pull();else if(meta.dirty&&sconf())schedulePush(0);});
+window.addEventListener('online',pull);
+setInterval(pull,90000);
+setTimeout(pull,900);
 })();
 
 </script>
@@ -1230,6 +1314,18 @@ function gSection(){
   else if(c.clientId)h+='<p class="hint">Par défaut, ton calendrier principal est lu. Tu peux en ajouter d’autres.</p>';
   return h+'<div class="sec-h2"><h4>Ou depuis un fichier</h4></div>';
 }
+function syncSection(){
+  const Y=window.__SYNC;if(!Y)return '';
+  const c=Y.cfg(),st=Y.status(),ok=!!(c.url&&c.key);
+  let h='<div class="sec-h2"><h4>Synchronisation entre appareils</h4></div><p class="hint" style="margin:0 0 8px">Relie ton ordinateur et ton téléphone : ton plan est copié dans un fichier sur ton hébergement, protégé par une clé que toi seul connais. Fais cette étape sur chaque appareil.</p>';
+  h+='<label class="lab" for="sy-url" style="margin-top:0">Adresse du fichier de synchronisation</label><input class="in" id="sy-url" data-commit="syurl" value="'+esc(c.url||'')+'" placeholder="https://ton-site.com/plan/pdm-sync.php" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url">';
+  h+='<label class="lab" for="sy-key">Clé</label><input class="in" id="sy-key" type="password" data-commit="sykey" value="'+esc(c.key||'')+'" placeholder="La clé du fichier pdm-sync.php" autocomplete="off" autocapitalize="off" spellcheck="false">';
+  h+='<div class="btns"><button class="btn primary" type="button" data-act="sy-now"'+(st.state==='busy'?' disabled':'')+'>'+(st.state==='busy'?'Synchronisation…':'Synchroniser maintenant')+'</button></div>';
+  if(ok&&st.msg)h+='<p class="hint" role="status"'+(st.state==='err'?' style="color:var(--ko)"':'')+'>'+esc(st.msg)+'</p>';
+  else if(ok)h+='<p class="hint">Les changements partent automatiquement quelques secondes après chaque modification, et se récupèrent à l’ouverture de l’outil.</p>';
+  h+='<p class="hint">Le calendrier Google n’est pas copié : chaque appareil le relit lui-même.</p>';
+  return h;
+}
 const IMPC=['items','quotas','agenda','reviews','profile','wins','budget','revues','models'];
 function impBlock(){
   let h='<label class="lab" for="imp-file">Restaurer une sauvegarde (.json)</label><input class="in" type="file" id="imp-file" accept=".json,application/json" data-commit="impfile">';
@@ -1374,7 +1470,7 @@ function sheetProfile(){
    +'<label class="lab" for="pf-devise">Cap ou devise (affiché en haut)</label><textarea class="in" id="pf-devise" data-commit="pf" data-field="devise" placeholder="La phrase qui te garde sur la route">'+esc(p.devise||'')+'</textarea>'
    +'<div class="sec-h2"><h4>Ma journée de travail</h4></div><p class="hint" style="margin:0 0 8px">Sert à calculer ton temps libre : la plage de la journée moins tes rendez-vous.</p><div class="fgrid"><div><label class="lab" for="pf-ws" style="margin-top:0">Début</label><input class="in" type="time" id="pf-ws" data-commit="pf" data-field="workStart" value="'+esc(p.workStart||'06:00')+'"></div><div><label class="lab" for="pf-we" style="margin-top:0">Fin</label><input class="in" type="time" id="pf-we" data-commit="pf" data-field="workEnd" value="'+esc(p.workEnd||'22:00')+'"></div></div>'
    +'<div class="sec-h2"><h4>Mes données</h4></div><p class="hint" style="margin:0 0 8px">Une copie complète de ton plan (objectifs, actions, budget, victoires, revues) dans un fichier que tu gardes chez toi.</p>'+(dl?'<button class="btn" type="button" data-act="export">Exporter mes données</button>':'<p class="hint">L’export est disponible dans un navigateur compatible ou l’application Claude.</p>')
-   +impBlock()
+   +impBlock()+syncSection()
    +'<div class="sec-h2"><h4>Mes domaines</h4></div><p class="hint" style="margin:0 0 8px">Les grands domaines de ta vie, utilisés dans les objectifs, la synthèse, les victoires. Renommer un domaine met à jour tout ce qui l’utilise.</p>'
    +getDomains().map((d,i)=>'<div class="cur" style="grid-template-columns:auto 1fr auto;margin-bottom:6px">'+swatch(d).replace('style="','style="width:18px;height:18px;margin:0;')+'<input class="in" id="dom-'+i+'" data-commit="domname" data-i="'+i+'" value="'+esc(d)+'" aria-label="Domaine '+(i+1)+'"><button class="mini" data-act="dom-del" data-i="'+i+'" aria-label="Retirer">Retirer</button></div>').join('')
    +'<div class="cur" style="grid-template-columns:1fr auto;margin-top:6px"><input class="in" id="dom-new" data-draft="dom-new" value="'+esc(dv('dom-new'))+'" placeholder="Nouveau domaine" autocomplete="off"><button class="mini plus" data-act="dom-add">Ajouter</button></div>'
@@ -1689,6 +1785,7 @@ const handlers={
     ui.sheet=null;ui.ics=null;render();toast('Agenda mis à jour sur '+hz+' jours.');
   },
   'g-sync':()=>{gSync(true);},
+  'sy-now':()=>{const Y=window.__SYNC;if(!Y)return;Y.now().then(()=>{toast('Synchronisé.');},()=>{});},
   'g-cals':async()=>{
     const G=window.__GSYNC;if(!G||ui.gBusy)return;
     ui.gBusy=true;ui.gMsg='Chargement de tes calendriers…';render();
@@ -1777,6 +1874,8 @@ const commits={
   },
   domname:el=>renameDomain(parseInt(el.dataset.i,10),el.value),
   icsh:()=>render(),
+  syurl:el=>{const Y=window.__SYNC;if(Y){Y.setCfg({url:el.value.trim()});render();if(Y.configured())Y.now().catch(()=>{});}},
+  sykey:el=>{const Y=window.__SYNC;if(Y){Y.setCfg({key:el.value.trim()});render();if(Y.configured())Y.now().catch(()=>{});}},
   gcid:el=>{const G=window.__GSYNC;if(G){G.setCfg({clientId:el.value.trim()});ui.gMsg='';ui.gCals=null;render();}},
   impfile:el=>{
     const f=el.files&&el.files[0];if(!f)return;
@@ -1910,6 +2009,7 @@ function onField(e){
 document.addEventListener('input',onField);
 document.addEventListener('change',onField);
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.includes(h)&&h!==ui.tab){ui.tab=h;ui.sheet=null;render();}});
+if(window.__SYNC)window.__SYNC.onStatus(()=>{if(ui.sheet&&ui.sheet.type==='profile')render();});
 document.addEventListener('pointerdown',()=>{if(window.__GSYNC&&ui.gNeeds&&ui.gTapOK&&!ui.gBusy&&window.__GSYNC.configured()){ui.gTapOK=false;gSync(true);}},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();ensureRecurring();}});
 
