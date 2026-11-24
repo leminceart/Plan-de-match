@@ -364,7 +364,7 @@ window.claude={use:function(n){
   return Promise.resolve(null);
 }};
 // ---- Google Agenda (lecture et création de rendez-vous)
-var GKEY='pdm-google',SCOPE='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events',token=null,tokenExp=0;
+var GKEY='pdm-google',SCOPE_RO='https://www.googleapis.com/auth/calendar.readonly',SCOPE_RW='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events',token=null,tokenExp=0;
 function cfg(){try{return JSON.parse(localStorage.getItem(GKEY)||'{}')||{};}catch(e){return{};}}
 function setCfg(o){try{localStorage.setItem(GKEY,JSON.stringify(Object.assign(cfg(),o)));}catch(e){}}
 function loadGIS(){return new Promise(function(res,rej){
@@ -377,7 +377,7 @@ function getToken(interactive,consent){
   var c=cfg();if(!c.clientId)return Promise.reject({code:'no_client'});
   return loadGIS().then(function(){return new Promise(function(res,rej){
     var tc=google.accounts.oauth2.initTokenClient({
-      client_id:c.clientId,scope:SCOPE,
+      client_id:c.clientId,scope:(c.write?SCOPE_RW:SCOPE_RO),
       callback:function(r){if(r&&r.access_token){token=r.access_token;tokenExp=Date.now()+(Number(r.expires_in)||3600)*1000;res(token);}else rej({code:(r&&r.error)||'denied'});},
       error_callback:function(e){rej({code:(e&&e.type)||'popup'});}
     });
@@ -416,10 +416,11 @@ function evBody(s){
   return b;
 }
 function evPath(cal,id){return '/calendars/'+encodeURIComponent(cal||'primary')+'/events'+(id?'/'+encodeURIComponent(id):'');}
-function createEvent(s){return getToken(true).then(function(t){return apix('POST',evPath(s.cal),t,evBody(s));});}
-function updateEvent(cal,id,s){return getToken(true).then(function(t){return apix('PATCH',evPath(cal,id),t,evBody(s));});}
-function removeEvent(cal,id){return getToken(true).then(function(t){return apix('DELETE',evPath(cal,id),t);});}
-function authorize(){token=null;return getToken(true,true);}
+function needW(){return cfg().write?null:Promise.reject({code:'nowrite'});}
+function createEvent(s){return needW()||getToken(true).then(function(t){return apix('POST',evPath(s.cal),t,evBody(s));});}
+function updateEvent(cal,id,s){return needW()||getToken(true).then(function(t){return apix('PATCH',evPath(cal,id),t,evBody(s));});}
+function removeEvent(cal,id){return needW()||getToken(true).then(function(t){return apix('DELETE',evPath(cal,id),t);});}
+function authorize(){token=null;setCfg({write:true});return getToken(true,true).catch(function(e){setCfg({write:false});token=null;throw e;});}
 function calendars(interactive){return getToken(interactive).then(function(t){return api('/users/me/calendarList?minAccessRole=reader&maxResults=250',t);}).then(function(j){return (j.items||[]).map(function(c){return{id:c.id,name:c.summaryOverride||c.summary||c.id,primary:!!c.primary};});});}
 function fetchEvents(days,interactive){
   return getToken(interactive).then(function(tok){
@@ -863,6 +864,7 @@ function rdvRow(e,ds){
 function rdvDefaults(){const n=new Date();let h=n.getHours()+1,d=dstr(n);if(h>20){h=9;d=dstr(addDays(n,1));}return{title:'',place:'',note:'',date:d,s:pad(h)+':00',e:pad(h+1)+':00',allDay:false,rem:'default'};}
 function rdvErr(e){
   const c=e&&e.code;
+  if(c==='nowrite')return 'Pour ajouter des rendez-vous, autorise d’abord l’écriture : touche « Autoriser Google » et accepte « modifier les événements ».';
   if(c==='scope')return 'Google a refusé. Soit l’écriture n’est pas autorisée (touche « Autoriser Google » et coche « modifier les événements »), soit ce rendez-vous est dans un calendrier en lecture seule.';
   if(c==='auth'||c==='interaction_required'||c==='immediate_failed'||c==='denied'||c==='access_denied'||c==='popup'||c==='popup_failed_to_open'||c==='popup_closed')return 'Connexion à Google nécessaire. Touche « Autoriser Google », puis réessaie.';
   if(c==='offline')return 'Pas de connexion. Réessaie en ligne.';
