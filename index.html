@@ -375,15 +375,19 @@ function loadGIS(){return new Promise(function(res,rej){
 function getToken(interactive,consent){
   if(token&&Date.now()<tokenExp-60000)return Promise.resolve(token);
   var c=cfg();if(!c.clientId)return Promise.reject({code:'no_client'});
-  return loadGIS().then(function(){return new Promise(function(res,rej){
+  function go(){return new Promise(function(res,rej){
     var tc=google.accounts.oauth2.initTokenClient({
       client_id:c.clientId,scope:(c.write?SCOPE_RW:SCOPE_RO),
       callback:function(r){if(r&&r.access_token){token=r.access_token;tokenExp=Date.now()+(Number(r.expires_in)||3600)*1000;res(token);}else rej({code:(r&&r.error)||'denied'});},
       error_callback:function(e){rej({code:(e&&e.type)||'popup'});}
     });
     tc.requestAccessToken({prompt:consent?'consent':(interactive?'':'none')});
-  });});
+  });}
+  // Safari n'ouvre la fenêtre Google que si l'appel part directement du geste : pas d'attente avant si la bibliothèque est déjà là
+  if(window.google&&google.accounts&&google.accounts.oauth2)return go();
+  return loadGIS().then(go);
 }
+try{if(cfg().clientId)setTimeout(function(){loadGIS().catch(function(){});},300);}catch(e){}
 function api(path,tok){
   return fetch('https://www.googleapis.com/calendar/v3'+path,{headers:{Authorization:'Bearer '+tok}}).then(function(r){
     if(r.status===401){token=null;throw{code:'auth'};}
@@ -1627,7 +1631,7 @@ async function gSync(interactive){
     const c=e&&e.code;ui.gTapOK=(c==='popup_failed_to_open'||c==='popup'||c==='interaction_required'||c==='immediate_failed'||c==='auth');
   }
   ui.gBusy=false;
-  if(!ui.sheet||ui.sheet.type!=='agenda')toast(ui.gMsg);
+  if((interactive||!ui.gTapOK)&&(!ui.sheet||ui.sheet.type!=='agenda'))toast(ui.gMsg);
   render();
 }
 function gAuto(){
@@ -2474,7 +2478,7 @@ document.addEventListener('input',onField);
 document.addEventListener('change',onField);
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.includes(h)&&h!==ui.tab){ui.tab=h;ui.sheet=null;render();}});
 if(window.__SYNC)window.__SYNC.onStatus(()=>{if(ui.sheet&&ui.sheet.type==='profile')render();});
-document.addEventListener('pointerdown',()=>{if(window.__GSYNC&&ui.gNeeds&&ui.gTapOK&&!ui.gBusy&&window.__GSYNC.configured()){ui.gTapOK=false;gSync(true);}},{passive:true});
+document.addEventListener('click',()=>{if(window.__GSYNC&&ui.gNeeds&&ui.gTapOK&&!ui.gBusy&&window.__GSYNC.configured()){ui.gTapOK=false;gSync(true);}},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();ensureRecurring();}});
 
 // ---------- démarrage ----------
