@@ -372,9 +372,38 @@ function loadGIS(){return new Promise(function(res,rej){
   var s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
   s.onload=function(){res();};s.onerror=function(){rej({code:'offline'});};document.head.appendChild(s);
 });}
+var TOKKEY='pdm-gtok',STKEY='pdm-gstate';
+function isIOS(){try{return /iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}catch(e){return false;}}
+function stored(){try{var o=JSON.parse(localStorage.getItem(TOKKEY)||'null');if(o&&o.t&&Date.now()<o.exp-60000&&(!cfg().write||o.w))return o;}catch(e){}return null;}
+function redirectAuth(consent){
+  var c=cfg(),st=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  try{localStorage.setItem(STKEY,JSON.stringify({s:st,w:!!c.write}));}catch(e){}
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?client_id='+encodeURIComponent(c.clientId)+'&redirect_uri='+encodeURIComponent(location.origin+location.pathname)+'&response_type=token&scope='+encodeURIComponent(c.write?SCOPE_RW:SCOPE_RO)+'&state='+st+'&include_granted_scopes=true'+(consent?'&prompt=consent':'');
+  return new Promise(function(){});
+}
+// retour de Google après une connexion par redirection (iPhone / Safari)
+(function(){
+  try{
+    var h=location.hash;if(!h||h.indexOf('state=')<0||(h.indexOf('access_token=')<0&&h.indexOf('error=')<0))return;
+    var p={};h.replace(/^#/,'').split('&').forEach(function(kv){var i=kv.indexOf('=');if(i>0)p[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1).replace(/\+/g,' '));});
+    var ss=JSON.parse(localStorage.getItem(STKEY)||'null');localStorage.removeItem(STKEY);
+    history.replaceState(null,'',location.pathname+location.search);
+    if(!ss||ss.s!==p.state){return;}
+    if(p.access_token){
+      var exp=Date.now()+(Number(p.expires_in)||3600)*1000;
+      localStorage.setItem(TOKKEY,JSON.stringify({t:p.access_token,exp:exp,w:!!ss.w}));
+      window.__GRET={ok:true,w:!!ss.w};
+    }else{
+      if(ss.w){var cc=cfg();cc.write=false;localStorage.setItem(GKEY,JSON.stringify(cc));}
+      window.__GRET={error:p.error||'denied'};
+    }
+  }catch(e){}
+})();
 function getToken(interactive,consent){
   if(token&&Date.now()<tokenExp-60000)return Promise.resolve(token);
   var c=cfg();if(!c.clientId)return Promise.reject({code:'no_client'});
+  var so=stored();if(so&&!consent){token=so.t;tokenExp=so.exp;return Promise.resolve(token);}
+  if(isIOS()){if(interactive||consent)return redirectAuth(consent);return Promise.reject({code:'interaction_required'});}
   function go(){return new Promise(function(res,rej){
     var tc=google.accounts.oauth2.initTokenClient({
       client_id:c.clientId,scope:(c.write?SCOPE_RW:SCOPE_RO),
@@ -384,10 +413,11 @@ function getToken(interactive,consent){
     tc.requestAccessToken({prompt:consent?'consent':(interactive?'':'none')});
   });}
   // Safari n'ouvre la fenêtre Google que si l'appel part directement du geste : pas d'attente avant si la bibliothèque est déjà là
-  if(window.google&&google.accounts&&google.accounts.oauth2)return go();
-  return loadGIS().then(go);
+  function fb(e){if((interactive||consent)&&e&&(e.code==='popup_closed'||e.code==='popup_failed_to_open'||e.code==='popup'))return redirectAuth(consent);throw e;}
+  if(window.google&&google.accounts&&google.accounts.oauth2)return go().catch(fb);
+  return loadGIS().then(go).catch(fb);
 }
-try{if(cfg().clientId)setTimeout(function(){loadGIS().catch(function(){});},300);}catch(e){}
+try{if(cfg().clientId&&!isIOS())setTimeout(function(){loadGIS().catch(function(){});},300);}catch(e){}
 function api(path,tok){
   return fetch('https://www.googleapis.com/calendar/v3'+path,{headers:{Authorization:'Bearer '+tok}}).then(function(r){
     if(r.status===401){token=null;throw{code:'auth'};}
@@ -448,7 +478,7 @@ function fetchEvents(days,interactive){
     return page(0,'');
   });
 }
-window.__GSYNC={cfg:cfg,setCfg:setCfg,configured:function(){return !!cfg().clientId;},fetch:fetchEvents,calendars:calendars,create:createEvent,update:updateEvent,remove:removeEvent,authorize:authorize,_body:evBody};
+window.__GSYNC={cfg:cfg,setCfg:setCfg,configured:function(){return !!cfg().clientId;},fetch:fetchEvents,calendars:calendars,create:createEvent,update:updateEvent,remove:removeEvent,authorize:authorize,redirects:isIOS(),_body:evBody};
 
 // ---- synchronisation entre appareils (fichier sur l'hébergement de l'utilisateur)
 var SKEY='pdm-sync',MKEY='pdm-sync-meta',SYNCED=['items','quotas','reviews','profile','wins','budget','revues','models','habits','hlog','excuses'];
@@ -1636,7 +1666,9 @@ async function gSync(interactive){
 }
 function gAuto(){
   const G=window.__GSYNC;if(!G||ui.gAuto||ui.status!=='ok')return;
-  ui.gAuto=true;if(G.configured())gSync(false);
+  ui.gAuto=true;
+  const gr=window.__GRET;if(gr){window.__GRET=null;toast(gr.ok?(gr.w?'Écriture autorisée. Tu peux créer des rendez-vous.':'Google connecté. Synchronisation…'):'Connexion Google refusée ou annulée ('+gr.error+').');}
+  if(G.configured())gSync(false);
 }
 function gSection(){
   const G=window.__GSYNC;if(!G)return '';
@@ -1904,14 +1936,27 @@ function sheetNew(){
     h+='<label class="lab" for="new-dur">Durée (minutes)</label><input class="in" type="number" inputmode="numeric" min="0" step="5" id="new-dur" data-draft="new-dur" value="'+esc(dv('new-dur'))+'">';
   }
   if(lv!=='day')h+='<div class="fgrid"><div><label class="lab" for="new-target">Cible (facultatif)</label><input class="in" id="new-target" type="text" inputmode="decimal" data-draft="new-target" value="'+esc(dv('new-target'))+'" placeholder="Ex. 25"></div><div><label class="lab" for="new-unit">Unité</label><input class="in" id="new-unit" data-draft="new-unit" value="'+esc(dv('new-unit'))+'" placeholder="dossiers, FCFA…"></div></div><label class="lab" for="new-due">Échéance (facultatif)</label><input class="in" type="date" id="new-due" data-draft="new-due" value="'+esc(dv('new-due'))+'"><p class="hint">Sans date, l’échéance est la fin de la période ('+fmtDate(range(lv,s.period)[1])+').</p>';
-  h+='<div class="btns"><button class="btn primary" type="submit">Ajouter</button></div></form></div>';
+  h+='<div class="btns"><button class="btn primary" type="submit">Ajouter</button><button class="btn" type="button" data-act="new-more">Ajouter, puis un autre</button></div></form></div>';
   return h;
+}
+function splitObjectives(txt){
+  const out=[];
+  String(txt||'').split(/\r?\n+/).forEach(line=>{
+    line.replace(/([.!?…])\s+(?=[A-ZÀ-ÖØ-Þ0-9«"“(])/g,'$1\u0001').split(/;|\u0001/).forEach(p=>{
+      let t=p.replace(/^\s*(?:[-–—•*·▪●]+|\(?\d{1,2}[.)]|[a-z][.)])\s+/i,'').replace(/[\s.;,]+$/,'').trim();
+      if(t.length>1)out.push(t);
+    });
+  });
+  return out;
 }
 function sheetDecline(){
   const s=ui.sheet,it=byId.get(s.id);if(!it)return head('Décliner','Décliner')+'<p class="hint">Élément introuvable.</p></div>';
-  let h=head('Décliner en '+LCHILD[it.level],'Décliner')+'<h3>'+esc(it.title)+'</h3><p class="hint">Une ligne par période. Laisse vide pour ignorer une période. Chaque ligne sera rattachée à cet objectif.</p>';
+  let h=head('Décliner en '+LCHILD[it.level],'Décliner')+'<h3>'+esc(it.title)+'</h3><p class="hint">Une ligne = un objectif. Tu peux en mettre plusieurs pour la même période. Laisse vide pour ignorer une période. Tout sera rattaché à cet objectif.</p>';
   h+='<form data-submit="decline">';
-  s.rows.forEach((r,i)=>{h+='<label class="lab" for="dec-'+i+'">'+esc(plabel(r.level,r.key))+'</label><input class="in" id="dec-'+i+'" data-draft="dec-'+i+'" value="'+esc(dv('dec-'+i))+'" autocomplete="off" placeholder="À préciser">';});
+  h+='<label class="lab" for="dec-bulk" style="margin-top:0">Colle ou dicte tes objectifs, je les répartis</label><div class="mf"><textarea class="in" id="dec-bulk" data-draft="dec-bulk" rows="4" placeholder="Un objectif par ligne, ou un paragraphe : je le découpe phrase par phrase.">'+esc(dv('dec-bulk'))+'</textarea>'+micBtn('dec-bulk')+'</div>';
+  h+='<div class="btns"><button class="btn primary" type="button" data-act="dec-split">Répartir sur les '+LCHILD[it.level]+'</button></div>';
+  h+='<p class="hint">Les objectifs sont répartis dans l’ordre, à parts égales. Tu peux ensuite corriger ou déplacer chaque ligne ci-dessous.</p>';
+  s.rows.forEach((r,i)=>{h+='<label class="lab" for="dec-'+i+'">'+esc(plabel(r.level,r.key))+'</label><textarea class="in" id="dec-'+i+'" data-draft="dec-'+i+'" rows="'+Math.max(2,Math.min(8,(dv('dec-'+i).split('\n').length)+0))+'" placeholder="À préciser (une ligne par objectif)">'+esc(dv('dec-'+i))+'</textarea>';});
   h+='<div class="btns"><button class="btn" type="button" data-act="dec-copy">Reprendre l’intitulé</button>'+(ui.canSample?'<button class="btn" type="button" data-act="dec-ai"'+(ui.aiBusy?' disabled':'')+'>'+(ui.aiBusy?'Claude réfléchit…':'Proposer avec Claude')+'</button>':'')+'</div>';
   if(ui.canSample)h+='<label class="lab" for="dec-ctx">Précisions pour Claude (facultatif)</label><input class="in" id="dec-ctx" data-draft="dec-ctx" value="'+esc(dv('dec-ctx'))+'" autocomplete="off" placeholder="Contraintes, ressources, point de départ">';
   h+='<div class="btns"><button class="btn primary" type="submit">Créer les lignes</button></div></form></div>';
@@ -2111,6 +2156,16 @@ const handlers={
     Object.keys(ui.draft).forEach(k=>{if(k.indexOf('dec-')===0)delete ui.draft[k];});
     ui.sheet={type:'decline',id:it.id,rows:childKeys(it.level,it.period).map(k=>({level:cl,key:k}))};render();
   },
+  'dec-split':()=>{
+    const s=ui.sheet;if(!s||s.type!=='decline')return;
+    const lines=splitObjectives(ui.draft['dec-bulk']||'');
+    if(!lines.length){toast('Écris ou colle d’abord tes objectifs.');return;}
+    const p=s.rows.length,n=lines.length,bucket=s.rows.map(()=>[]);
+    lines.forEach((t,i)=>bucket[Math.min(p-1,Math.floor(i*p/n))].push(t));
+    bucket.forEach((b,i)=>{if(b.length){const old=String(ui.draft['dec-'+i]||'').trim();ui.draft['dec-'+i]=(old?old+'\n':'')+b.join('\n');}});
+    delete ui.draft['dec-bulk'];render();toast(n+' objectif'+(n>1?'s':'')+' réparti'+(n>1?'s':'')+'. Corrige si besoin, puis « Créer les lignes ».');
+  },
+  'new-more':()=>{submits.new(null,true);},
   'dec-copy':()=>{const it=byId.get(ui.sheet.id);if(!it)return;ui.sheet.rows.forEach((r,i)=>{ui.draft['dec-'+i]=it.title+' · '+plabel(r.level,r.key,true);});render();},
   'dec-ai':async()=>{
     const s=ui.sheet,it=byId.get(s.id);if(!it||!sample||ui.aiBusy)return;
@@ -2393,12 +2448,13 @@ const submits={
     delete ui.draft['qa-title'];render();
     setTimeout(()=>{const e=document.getElementById('qa-title');if(e)e.focus();},30);
   },
-  new:()=>{
+  new:(f,more)=>{
     const s=ui.sheet,title=(ui.draft['new-title']||'').trim();
     if(!title){toast('Donne un intitulé.');return;}
     let par=ui.draft['new-parent'];
     if(par===undefined){const c=parentCands(s.level,s.period);par=s.parent||(c.length===1?c[0].id:'');}
     const id=addItem({title:title,level:s.level,period:s.period,parentId:par,domain:ui.draft['new-domain'],cat:ui.newCat,prio:ui.draft['new-prio'],dur:parseInt(ui.draft['new-dur'],10)||0,target:parseFloat(String(ui.draft['new-target']||'').replace(/\s/g,'').replace(',','.'))||0,unit:(ui.draft['new-unit']||'').trim(),due:ui.draft['new-due']||''});
+    if(more===true){['new-title','new-target','new-unit','new-due','new-dur'].forEach(k=>delete ui.draft[k]);render();toast('Ajouté. Tu peux en saisir un autre.');setTimeout(()=>{const e=document.getElementById('new-title');if(e)e.focus();},30);return;}
     Object.keys(ui.draft).forEach(k=>{if(k.indexOf('new-')===0)delete ui.draft[k];});
     if(s.level==='day'){ui.sheet=null;toast('Action ajoutée.');}
     else{ui.sheet={type:'item',id:id,pending:true};toast('Ajouté. Tu peux maintenant le décliner.');}
@@ -2407,7 +2463,7 @@ const submits={
   decline:()=>{
     const s=ui.sheet,it=byId.get(s.id);if(!it)return;
     const cl=LEVELS[LEVELS.indexOf(it.level)+1];let n=0;
-    s.rows.forEach((r,i)=>{const v=(ui.draft['dec-'+i]||'').trim();if(v){addItem({title:v,level:cl,period:r.key,parentId:it.id,domain:it.domain});n++;}});
+    s.rows.forEach((r,i)=>{String(ui.draft['dec-'+i]||'').split(/\n+/).map(x=>x.trim()).filter(Boolean).forEach(v=>{addItem({title:v,level:cl,period:r.key,parentId:it.id,domain:it.domain});n++;});});
     if(!n){toast('Remplis au moins une ligne, ou touche « Reprendre l’intitulé ».');return;}
     Object.keys(ui.draft).forEach(k=>{if(k.indexOf('dec-')===0)delete ui.draft[k];});
     ui.sheet={type:'item',id:it.id};render();toast(n+' ligne'+(n>1?'s':'')+' créée'+(n>1?'s':'')+'.');
@@ -2478,7 +2534,7 @@ document.addEventListener('input',onField);
 document.addEventListener('change',onField);
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(TABS.includes(h)&&h!==ui.tab){ui.tab=h;ui.sheet=null;render();}});
 if(window.__SYNC)window.__SYNC.onStatus(()=>{if(ui.sheet&&ui.sheet.type==='profile')render();});
-document.addEventListener('click',()=>{if(window.__GSYNC&&ui.gNeeds&&ui.gTapOK&&!ui.gBusy&&window.__GSYNC.configured()){ui.gTapOK=false;gSync(true);}},{passive:true});
+document.addEventListener('click',()=>{if(window.__GSYNC&&!window.__GSYNC.redirects&&ui.gNeeds&&ui.gTapOK&&!ui.gBusy&&window.__GSYNC.configured()){ui.gTapOK=false;gSync(true);}},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){render();ensureRecurring();}});
 
 // ---------- démarrage ----------
