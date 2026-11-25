@@ -1919,7 +1919,7 @@ function metricsDash(t){
 }
 function viewSynth(t){
   const lv=ui.cLevel,key=ui.ckeys[lv],today=dstr(t),cur=keyOf(lv,t)===key;
-  let h='<div class="seg" style="grid-template-columns:repeat(3,1fr)" role="group" aria-label="Horizon">'+CLEVELS.map(l=>'<button data-act="c-lvl" data-l="'+l+'" aria-pressed="'+(l===lv)+'">'+LNAME[l]+'</button>').join('')+'</div>';
+  let h=metricsDash(t)+'<div class="sec-h" style="margin-top:26px"><h2>'+ico('target')+'Objectifs par période</h2></div><div class="seg" style="grid-template-columns:repeat(3,1fr)" role="group" aria-label="Horizon">'+CLEVELS.map(l=>'<button data-act="c-lvl" data-l="'+l+'" aria-pressed="'+(l===lv)+'">'+LNAME[l]+'</button>').join('')+'</div>';
   h+='<div class="pnav"><button data-act="c-prev" aria-label="Période précédente">‹</button><div class="pl"><b>'+esc(plabel(lv,key))+'</b><small>'+LNAME[lv]+(cur?' · en cours':'')+'</small></div><button data-act="c-next" aria-label="Période suivante">›</button></div>';
   if(!cur)h+='<button class="link" data-act="c-today">Revenir à la période en cours</button>';
   const list=items.filter(i=>i.level===lv&&i.period===key&&!i.dropped);
