@@ -1898,6 +1898,15 @@ function sheetItem(){
     h+='<label class="lab" for="it-parent">Sert l’objectif '+ABOVE[lv]+'</label><select class="in" id="it-parent" data-commit="parent" data-id="'+it.id+'"><option value="">Aucun, hors objectif</option>'+opts.map(c=>'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+esc(plabel(up,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</select>';
     if(!opts.length)h+='<p class="hint">Aucun objectif '+ABOVE[lv]+' ne couvre cette période. Crée-le d’abord dans l’onglet Objectifs.</p>';
   }
+  if(lv!=='day'&&lv!=='year'){
+    const par=it.parentId&&byId.get(it.parentId);let ks=[];
+    if(par&&LEVELS.indexOf(par.level)===idx-1)ks=childKeys(par.level,par.period).slice();
+    else{const a=lv==='quarter'?[-2,5]:[-3,9];for(let n=a[0];n<=a[1];n++)ks.push(shiftKey(lv,keyOf(lv,new Date()),n));}
+    if(ks.indexOf(it.period)<0)ks.push(it.period);
+    ks=ks.filter((k,i)=>ks.indexOf(k)===i).sort();
+    h+='<label class="lab" for="it-period">'+(lv==='month'?'Mois d’exécution':lv==='week'?'Semaine d’exécution':'Trimestre d’exécution')+'</label><select class="in" id="it-period" data-commit="period" data-id="'+it.id+'">'+ks.map(k=>'<option value="'+k+'"'+(k===it.period?' selected':'')+'>'+esc(plabel(lv,k))+'</option>').join('')+'</select>';
+    if(par)h+='<p class="hint">Les périodes proposées sont celles de l’objectif au-dessus. Pour sortir de cette plage, change d’abord l’objectif au-dessus.</p>';
+  }
   if(lv==='year')h+='<label class="lab" for="it-dom">Domaine</label><select class="in" id="it-dom" data-commit="domain" data-id="'+it.id+'"><option value="">Autre</option>'+getDomains().map(d=>'<option'+(it.domain===d?' selected':'')+'>'+d+'</option>').join('')+'</select>';
   if(lv==='day'){
     h+='<label class="lab" for="it-date">Jour</label><input class="in" type="date" id="it-date" data-commit="date" data-id="'+it.id+'" value="'+esc(ISO.test(it.period)?it.period:'')+'">';
@@ -1910,6 +1919,14 @@ function sheetItem(){
     if(ch.length)h+='<div class="panel">'+ch.map(c=>'<button class="grow" data-act="open" data-id="'+c.id+'"><span class="gt">'+(c.dropped?'<s>'+esc(c.title)+'</s>':esc(c.title))+'</span><span class="pc">'+(c.dropped?'—':Math.round(prog(c)*100)+'%')+'</span><span class="chain">'+esc(plabel(c.level,c.period,true))+'</span></button>').join('')+'</div>';
     else h+='<p class="hint">Rien en dessous pour l’instant.</p>';
     h+='<div class="btns"><button class="btn" data-act="add-child" data-id="'+it.id+'">+ '+(lv==='week'?'Action':'Sous-objectif')+'</button><button class="btn primary" data-act="decline" data-id="'+it.id+'">Décliner en '+LCHILD[lv]+'</button></div>';
+    {
+      const cl=LEVELS[LEVELS.indexOf(lv)+1],ks=childKeys(lv,it.period),thing=lv==='week'?'actions':'sous-objectifs';
+      const per=dv('sub-per',lv==='week'?defaultChildPeriod(it):'*');
+      h+='<div class="sec-h2"><h4>Plusieurs '+thing+' d’un coup</h4></div><p class="hint">Colle ou dicte un paragraphe : je le découpe et j’ajoute chaque phrase directement à cet objectif.</p>';
+      h+='<div class="mf"><textarea class="in" id="sub-bulk" data-draft="sub-bulk" rows="4" aria-label="Paragraphe à décliner" placeholder="Un '+(lv==='week'?'action':'sous-objectif')+' par ligne, ou un paragraphe.">'+esc(dv('sub-bulk'))+'</textarea>'+micBtn('sub-bulk')+'</div>';
+      h+='<label class="lab" for="sub-per">Période</label><select class="in" id="sub-per" data-draft="sub-per">'+(lv==='week'?'':'<option value="*"'+(per==='*'?' selected':'')+'>Répartir à parts égales sur les '+LCHILD[lv]+'</option>')+ks.map(k=>'<option value="'+k+'"'+(per===k?' selected':'')+'>'+esc(plabel(cl,k))+'</option>').join('')+'</select>';
+      h+='<div class="btns"><button class="btn primary" type="button" data-act="sub-add" data-id="'+it.id+'">Ajouter à cet objectif</button></div>';
+    }
   }
   if(lv==='day'&&!it.done)h+=excuseBlock(it);
   h+='<div class="btns">';
@@ -2166,6 +2183,18 @@ const handlers={
     delete ui.draft['dec-bulk'];render();toast(n+' objectif'+(n>1?'s':'')+' réparti'+(n>1?'s':'')+'. Corrige si besoin, puis « Créer les lignes ».');
   },
   'new-more':()=>{submits.new(null,true);},
+  'sub-add':b=>{
+    const it=byId.get(b.dataset.id);if(!it)return;
+    const lines=splitObjectives(ui.draft['sub-bulk']||'');
+    if(!lines.length){toast('Écris ou dicte d’abord ton texte.');return;}
+    const idx=LEVELS.indexOf(it.level),cl=LEVELS[idx+1],ks=childKeys(it.level,it.period);
+    if(!cl||!ks.length)return;
+    let per=ui.draft['sub-per'];if(per===undefined)per=it.level==='week'?defaultChildPeriod(it):'*';
+    if(per!=='*'&&ks.indexOf(per)<0)per=defaultChildPeriod(it);
+    const n=lines.length,p=ks.length;
+    lines.forEach((t,i)=>addItem({title:t,level:cl,period:per==='*'?ks[Math.min(p-1,Math.floor(i*p/n))]:per,parentId:it.id,domain:it.domain,cat:'tache'}));
+    delete ui.draft['sub-bulk'];render();toast(n+(cl==='day'?' action':' sous-objectif')+(n>1?'s':'')+' ajouté'+(n>1?'s':'')+(n>1?' à cet objectif.':' à cet objectif.'));
+  },
   'dec-copy':()=>{const it=byId.get(ui.sheet.id);if(!it)return;ui.sheet.rows.forEach((r,i)=>{ui.draft['dec-'+i]=it.title+' · '+plabel(r.level,r.key,true);});render();},
   'dec-ai':async()=>{
     const s=ui.sheet,it=byId.get(s.id);if(!it||!sample||ui.aiBusy)return;
@@ -2373,6 +2402,7 @@ const commits={
   excnote:el=>{const key='x_'+el.dataset.ref,cur=mem.excuses[key];if(!cur){toast('Choisis d’abord une raison.');return;}save('excuses',key,{note:el.value.trim().slice(0,300)},'update');},
   title:el=>{const id=el.dataset.id,v=el.value.trim();delete ui.draft['title:'+id];const it=byId.get(id);if(!v||!it){render();return;}if(it.title!==v)save('items',id,{title:v},'update');else render();},
   parent:el=>save('items',el.dataset.id,{parentId:el.value},'update'),
+  period:el=>{const it=byId.get(el.dataset.id);if(it&&el.value&&el.value!==it.period){save('items',it.id,{period:el.value},'update');toast('Déplacé vers '+plabel(it.level,el.value,true)+'.');}},
   domain:el=>save('items',el.dataset.id,{domain:el.value},'update'),
   cat:el=>save('items',el.dataset.id,{cat:el.value},'update'),
   prio:el=>save('items',el.dataset.id,{prio:el.value},'update'),
