@@ -46,6 +46,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .nav{display:flex;flex:1;justify-content:flex-end;min-width:0}
 .nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:1;max-width:96px;min-width:0;height:56px;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;border-radius:0}
 .nav button:hover{color:var(--fg)}
+.bdg{position:absolute;top:2px;left:calc(50% + 6px);min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#b3261e;color:#fff;font:700 10px/16px system-ui,sans-serif;font-style:normal;text-align:center;letter-spacing:0}
 .nav button[aria-current="page"]{color:var(--fg);border-bottom-color:var(--fg)}
 
 .wrap{max-width:1128px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 28px}
@@ -59,6 +60,8 @@ h1{font:600 25px/1.15 var(--font);margin:2px 0 2px;text-wrap:balance}
 .sec{margin-top:20px}
 .sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
 .sec-h h2{font:600 17px var(--font);margin:0}
+.ti{width:18px;height:18px;margin-right:8px;vertical-align:-3px;opacity:.5;flex:none}
+.grp .ti{width:14px;height:14px;margin-right:6px;vertical-align:-2px;opacity:.6}
 .aux{color:var(--muted);font-size:13px}
 .panel{background:var(--paper);border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .panel>*+*{border-top:1px solid var(--line2)}
@@ -661,6 +664,18 @@ const TABS=['aujourdhui','habitudes','objectifs','budget','synthese','bilan','vi
 const DEFAULT_DOMAINS=['Investissements','Patrimoine','Santé','Famille','Vie professionnelle'];
 function getDomains(){const d=(mem.profile.me||{}).domains;return Array.isArray(d)&&d.length?d:DEFAULT_DOMAINS;}
 const CATS={tache:'Tâches',appel:'Appels',budget:'Budget'};
+const ICO={
+  star:'<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5Z"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="m3.5 6 1.4 1.4L7 5M3.5 12l1.4 1.4L7 11M3.5 18l1.4 1.4L7 17"/>',
+  task:'<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.3 2.4 2.4 4.6-4.9"/>',
+  phone:'<path d="M5 4h4l1.8 4.6-2.3 1.5a11 11 0 0 0 5.4 5.4l1.5-2.3L20 15v4a1.5 1.5 0 0 1-1.6 1.5A15.5 15.5 0 0 1 3.5 5.6 1.5 1.5 0 0 1 5 4Z"/>',
+  cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  cycle:'<path d="M4 12a8 8 0 0 1 13.7-5.6L20 8.5"/><path d="M20 4v4.5h-4.5"/><path d="M20 12a8 8 0 0 1-13.7 5.6L4 15.5"/><path d="M4 20v-4.5h4.5"/>',
+  target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  bars:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 15h2"/>'
+};
+function ico(n){return '<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(ICO[n]||'')+'</svg>';}
 const CAT1={tache:'Tâche',appel:'Appel',budget:'Budget'};
 const ord=(a,b)=>(a.order||0)-(b.order||0);
 const fmt=n=>{n=Math.round((Number(n)||0)*10)/10;const parts=String(Math.abs(n)).split('.');return (n<0?'−':'')+parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f')+(parts[1]?','+parts[1]:'');};
@@ -935,23 +950,24 @@ function viewDay(t){
   const goals=items.filter(i=>i.level==='week'&&i.period===wk&&!i.dropped).sort(ord);
   const acts=items.filter(i=>i.level==='day'&&i.period===today&&!i.dropped);
   const done=acts.filter(i=>i.done).length;
-  let h=dueBanner(t)+excuseBanner(t)+'<div class="cols"><div><section class="sec"><div class="sec-h"><h2>Cap de la semaine</h2><span class="aux">'+esc(plabel('week',wk))+'</span></div>';
+  let h=yBanner(t)+dueBanner(t)+excuseBanner(t)+'<div class="cols"><div>';
+  let cap='<section class="sec"><div class="sec-h"><h2>'+ico('target')+'Cap de la semaine</h2><span class="aux">'+esc(plabel('week',wk))+'</span></div>';
   if(!goals.length){
-    h+='<div class="panel empty"><p>Aucun objectif pour cette semaine. Fixe ce qui doit être vrai dimanche soir.</p><button class="btn primary" data-act="new" data-l="week" data-p="'+wk+'">Ajouter un objectif de semaine</button></div>';
+    cap+='<div class="panel empty"><p>Aucun objectif pour cette semaine. Fixe ce qui doit être vrai dimanche soir.</p><button class="btn primary" data-act="new" data-l="week" data-p="'+wk+'">Ajouter un objectif de semaine</button></div>';
   }else{
-    h+='<div class="panel">'+goals.map(goalRow).join('')+'</div>'+paceSummary(goals)+'<button class="link" data-act="new" data-l="week" data-p="'+wk+'">+ Objectif de semaine</button>';
+    cap+='<div class="panel">'+goals.map(goalRow).join('')+'</div>'+paceSummary(goals)+'<button class="link" data-act="new" data-l="week" data-p="'+wk+'">+ Objectif de semaine</button>';
   }
-  h+='</section>';
+  cap+='</section>';
   const tops=acts.filter(i=>i.top).sort(ord),rest=acts.filter(i=>!i.top);
-  h+='<section class="sec"><div class="sec-h"><h2>Les 3 essentiels</h2><span class="aux">'+tops.filter(i=>i.done).length+'/'+tops.length+' faits</span></div><div class="panel">'+(tops.length?tops.map(actRow).join(''):'<p class="empty-line">Touche l’étoile d’une action pour la faire monter ici. Trois au maximum.</p>')+'</div></section>';
-  h+=habitsToday(t);
-  h+='<section class="sec"><div class="sec-h"><h2>'+(ui.focus?'Autres actions':'Actions du jour')+'</h2><span class="aux">'+done+'/'+acts.length+' faites</span></div>'+loadBlock(today)+'<div class="panel">';
+  h+='<section class="sec"><div class="sec-h"><h2>'+ico('star')+'Les 3 essentiels</h2><span class="aux">'+tops.filter(i=>i.done).length+'/'+tops.length+' faits</span></div><div class="panel">'+(tops.length?tops.map(actRow).join(''):'<p class="empty-line">Touche l’étoile d’une action pour la faire monter ici. Trois au maximum.</p>')+'</div></section>';
+  const hab=habitsToday(t);
+  h+='<section class="sec"><div class="sec-h"><h2>'+ico('list')+(ui.focus?'Autres actions':'Actions du jour')+'</h2><span class="aux">'+done+'/'+acts.length+' faites</span></div>'+loadBlock(today)+'<div class="panel">';
   if(ui.focus){
     h+='<p class="empty-line">Mode focus : '+rest.length+' autre'+(rest.length>1?'s':'')+' action'+(rest.length>1?'s':'')+' masquée'+(rest.length>1?'s':'')+'.</p><div class="pad"><button class="btn primary wide" data-act="focus">Tout afficher</button></div>';
   }else{
     Object.keys(CATS).forEach(c=>{
       const g=rest.filter(i=>(i.cat||'tache')===c).sort((a,b)=>(a.done-b.done)||((a.prio==='haute'?0:1)-(b.prio==='haute'?0:1))||ord(a,b));
-      if(g.length)h+='<div class="grp">'+CATS[c]+'</div>'+g.map(actRow).join('');
+      if(g.length)h+='<div class="grp">'+ico(c==='appel'?'phone':c==='budget'?'wallet':'task')+CATS[c]+'</div>'+g.map(actRow).join('');
     });
     if(!acts.length)h+='<p class="empty-line">Rien de prévu pour l’instant. Ajoute la première action.</p>';
   }
@@ -959,19 +975,20 @@ function viewDay(t){
   h+='</div><div>';
   const ev=agendaFor(today).slice().sort((a,b)=>String(a.s).localeCompare(String(b.s)));
   const sl=syncedLabel();
-  h+='<section class="sec"><div class="sec-h"><h2>Rendez-vous</h2><span class="aux">'+(sl?esc(sl)+' · ':'')+(window.__GSYNC&&window.__GSYNC.configured()?'<button class="link" data-act="rdv-new">+ Rendez-vous</button> · <button class="link" data-act="g-sync">Synchroniser</button> · <button class="link" data-act="agenda">Réglages</button>':'<button class="link" data-act="agenda">Mettre à jour</button>')+'</span></div><div class="panel">';
+  h+='<section class="sec"><div class="sec-h"><h2>'+ico('cal')+'Rendez-vous</h2><span class="aux">'+(sl?esc(sl)+' · ':'')+(window.__GSYNC&&window.__GSYNC.configured()?'<button class="link" data-act="rdv-new">+ Rendez-vous</button> · <button class="link" data-act="g-sync">Synchroniser</button> · <button class="link" data-act="agenda">Réglages</button>':'<button class="link" data-act="agenda">Mettre à jour</button>')+'</span></div><div class="panel">';
   if(ev.length)h+=ev.map(e=>rdvRow(e,today)).join('');
   else h+='<p class="empty-line">Aucun rendez-vous dans la copie de ton agenda pour aujourd’hui.</p>';
   h+='</div></section>';
+  h+=hab+cap;
   const qs=quotaList();
-  h+='<section class="sec"><div class="sec-h"><h2>Quotas de la semaine</h2><button class="link" data-act="quotas">Gérer</button></div><div class="panel">';
+  h+='<section class="sec"><div class="sec-h"><h2>'+ico('bars')+'Quotas de la semaine</h2><button class="link" data-act="quotas">Gérer</button></div><div class="panel">';
   if(!qs.length)h+='<p class="empty-line">Aucun quota. Ajoute tes heures d’anglais, de marche ou tes pages à écrire.</p>';
   qs.forEach(q=>{
     const v=(q.values&&q.values[wk])||0,p=Math.min(100,Math.round(v/(q.target||1)*100));
     h+='<div class="quota"><div class="qh"><span class="qt">'+esc(q.title)+' '+qChip(q,v)+'</span><span class="qv">'+fmt(v)+' / '+fmt(q.target||0)+' '+unitLabel(q.unit)+'</span></div><div class="qb"><span class="bar'+(v>=q.target?' full':'')+'"><i style="width:'+p+'%"></i></span><button class="mini" data-act="qminus" data-id="'+q.id+'" aria-label="Retirer">−</button><button class="mini plus" data-act="qplus" data-id="'+q.id+'">'+stepLabel(q)+'</button></div></div>';
   });
   h+='</div></section>';
-  {const bl=bIn('day',today),bt=bTot(bl);h+='<section class="sec"><div class="sec-h"><h2>Budget du jour</h2><button class="link" data-act="tab" data-t="budget">Ouvrir</button></div><div class="panel">'+(bl.length?budgetTable(bt):'<p class="empty-line">Aucune ligne de budget aujourd’hui.</p>')+'</div></section>';}
+  {const bl=bIn('day',today),bt=bTot(bl);h+='<section class="sec"><div class="sec-h"><h2>'+ico('wallet')+'Budget du jour</h2><button class="link" data-act="tab" data-t="budget">Ouvrir</button></div><div class="panel">'+(bl.length?budgetTable(bt):'<p class="empty-line">Aucune ligne de budget aujourd’hui.</p>')+'</div></section>';}
   h+='</div></div>';
   h+='<button class="btn wide" data-act="tab" data-t="bilan">Faire mon bilan du soir</button>';
   return h;
@@ -1038,22 +1055,40 @@ function viewGoals(t){
   return h;
 }
 
+function missedDays(t){
+  const has={};items.forEach(i=>{if(i.level==='day'&&!i.dropped&&ISO.test(i.period)){const e=has[i.period]||(has[i.period]={d:0,t:0});e.t++;if(i.done)e.d++;}});
+  const out=[];
+  for(let n=1;n<=120;n++){const d=dstr(addDays(t,-n));if(has[d]&&!(mem.reviews[d]&&mem.reviews[d].savedAt))out.push({day:d,d:has[d].d,t:has[d].t});}
+  return out;
+}
+function dayNav(real,day,miss){
+  const past=day<real;
+  let h='<div class="pnav" style="margin-bottom:10px"><button data-act="bj-prev" aria-label="Jour précédent">‹</button><div class="pl"><b>'+esc(plabel('day',day))+'</b><small>'+(past?'Bilan d’un jour passé':'Aujourd’hui')+'</small></div><button data-act="bj-next" aria-label="Jour suivant"'+(past?'':' disabled')+'>›</button></div>';
+  h+='<label class="lab" for="bj-date" style="margin-top:0">Choisir un autre jour</label><input class="in" type="date" id="bj-date" data-commit="bjdate" max="'+real+'" value="'+esc(day)+'">';
+  if(past)h+='<button class="link" data-act="bj-today">Revenir à aujourd’hui</button>';
+  if(miss.length){
+    const sh=ui.bjAll?miss:miss.slice(0,5);
+    h+='<section class="sec" style="margin-top:14px"><div class="sec-h"><h2>Bilans en retard</h2><span class="aux warn">'+miss.length+' jour'+(miss.length>1?'s':'')+'</span></div><div class="panel">'+sh.map(m=>'<button class="grow" data-act="bj-go" data-d="'+m.day+'"'+(m.day===day?' aria-current="true"':'')+'><span class="gt">'+(m.day===day?'<b>'+esc(plabel('day',m.day))+'</b>':esc(plabel('day',m.day)))+'</span><span class="pc">'+m.d+'/'+m.t+'</span><span class="chain">Toucher pour faire ce bilan</span></button>').join('')+(miss.length>5?'<div class="pad"><button class="link" data-act="bj-all">'+(ui.bjAll?'Réduire la liste':'Voir les '+(miss.length-5)+' autres')+'</button></div>':'')+'</div></section>';
+  }
+  return h;
+}
 function viewBilan(t){
-  const today=dstr(t),wk=weekKey(t);
+  const real=dstr(t),sel=(ui.bday&&ISO.test(ui.bday)&&ui.bday<real)?ui.bday:'';ui.bday=sel;
+  const tt=sel?parseD(sel):t,today=dstr(tt),wk=weekKey(tt),past=!!sel;
   const acts=items.filter(i=>i.level==='day'&&i.period===today&&!i.dropped);
   const done=acts.filter(i=>i.done).length,total=acts.length,score=total?done/total:0;
   const rest=acts.filter(i=>!i.done);
   const rev=mem.reviews[today]||{};
   const C=2*Math.PI*42;
-  let h='<div class="cols eq"><div><section class="sec"><div class="sec-h"><h2>Ma journée</h2><span class="aux">'+esc(plabel('day',today))+'</span></div><div class="panel">';
+  let h=dayNav(real,today,missedDays(t))+'<div class="cols eq"><div><section class="sec"><div class="sec-h"><h2>Ma journée</h2><span class="aux">'+esc(plabel('day',today))+'</span></div><div class="panel">';
   h+='<div class="score"><svg class="ring" viewBox="0 0 100 100" role="img" aria-label="'+Math.round(score*100)+' pour cent"><circle class="rtrack" cx="50" cy="50" r="42"/><circle class="rfill" cx="50" cy="50" r="42" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-score)).toFixed(1)+'" transform="rotate(-90 50 50)"/><text class="rtxt" x="50" y="57" text-anchor="middle">'+Math.round(score*100)+'%</text></svg>';
-  h+='<div><p class="big">'+done+' sur '+total+'</p><p class="aux">action'+(total>1?'s':'')+' faite'+(done>1?'s':'')+' aujourd’hui</p>'+(rev.savedAt?'<p class="aux" style="margin-top:6px">Bilan enregistré</p>':'')+'</div></div>';
-  if(rest.length)h+='<div class="pad"><div class="aux">Pas faites : '+rest.map(i=>esc(trunc(i.title,28))).join(', ')+'</div><button class="btn" data-act="carry">Reporter ces '+rest.length+' action'+(rest.length>1?'s':'')+' à demain</button></div>';
+  h+='<div><p class="big">'+done+' sur '+total+'</p><p class="aux">action'+(total>1?'s':'')+' faite'+(done>1?'s':'')+(past?' ce jour-là':' aujourd’hui')+'</p>'+(rev.savedAt?'<p class="aux" style="margin-top:6px">Bilan enregistré</p>':'')+'</div></div>';
+  if(rest.length)h+='<div class="pad"><div class="aux">Pas faites : '+rest.map(i=>esc(trunc(i.title,28))).join(', ')+'</div><button class="btn" data-act="carry">Reporter ces '+rest.length+' action'+(rest.length>1?'s':'')+(past?' au lendemain':' à demain')+'</button></div>';
   h+='<form class="pad" data-submit="review"><label class="lab" style="margin:0" for="bilan-note">Ce que je retiens de la journée</label><div class="mf"><textarea class="in" id="bilan-note" data-draft="bilan-note" placeholder="Ce qui a avancé, ce qui a coincé, ce que je change demain.">'+esc(dv('bilan-note',rev.note||''))+'</textarea>'+micBtn('bilan-note')+'</div><button class="btn primary" type="submit">Enregistrer le bilan</button></form>';
   h+='</div></section>';
   {
     const tw=winsList().filter(w=>w.date===today);
-    h+='<section class="sec"><div class="sec-h"><h2>Victoire du jour</h2><span class="aux">'+tw.length+' aujourd’hui</span></div><div class="panel">'+tw.map(winRow).join('')+'<form class="qa" data-submit="daywin"><div class="mf"><textarea class="in" id="bw-text" data-draft="bw-text" placeholder="Qu’est-ce que j’ai gagné aujourd’hui ?">'+esc(dv('bw-text'))+'</textarea>'+micBtn('bw-text')+'</div><button class="btn primary" type="submit">Noter cette victoire</button></form></div></section>';
+    h+='<section class="sec"><div class="sec-h"><h2>Victoire du jour</h2><span class="aux">'+tw.length+(past?' ce jour-là':' aujourd’hui')+'</span></div><div class="panel">'+tw.map(winRow).join('')+'<form class="qa" data-submit="daywin"><div class="mf"><textarea class="in" id="bw-text" data-draft="bw-text" placeholder="Qu’est-ce que j’ai gagné '+(past?'ce jour-là':'aujourd’hui')+' ?">'+esc(dv('bw-text'))+'</textarea>'+micBtn('bw-text')+'</div><button class="btn primary" type="submit">Noter cette victoire</button></form></div></section>';
   }
   h+='</div><div>';
   const s=weekStart(wk);
@@ -1061,7 +1096,7 @@ function viewBilan(t){
   for(let k=0;k<7;k++){
     const d=addDays(s,k),ds=dstr(d),a=items.filter(i=>i.level==='day'&&i.period===ds&&!i.dropped),dn=a.filter(i=>i.done).length;
     const sc=a.length?dn/a.length:0;
-    h+='<div class="d'+(ds===today?' now':'')+(ds>today?' future':'')+'" title="'+esc(plabel('day',ds))+' : '+dn+'/'+a.length+'"><div class="col" style="height:'+(4+Math.round(sc*60))+'px"></div><span>'+'LMMJVSD'[k]+'</span></div>';
+    h+='<div class="d'+(ds===real?' now':'')+(ds>real?' future':'')+'" title="'+esc(plabel('day',ds))+' : '+dn+'/'+a.length+'"><div class="col" style="height:'+(4+Math.round(sc*60))+'px"></div><span>'+'LMMJVSD'[k]+'</span></div>';
   }
   h+='</div>';
   const goals=items.filter(i=>i.level==='week'&&i.period===wk&&!i.dropped).sort(ord);
@@ -1116,6 +1151,11 @@ function dueReview(t){
   if(t.getDate()<=7){const pm=shiftKey('month',keyOf('month',t),-1);if(items.some(i=>i.level==='month'&&i.period===pm&&!i.dropped))c.push(['month',pm]);}
   for(let n=0;n<c.length;n++){if(!getRevue(c[n][0],c[n][1]).closed)return{level:c[n][0],period:c[n][1]};}
   return null;
+}
+function yBanner(t){
+  const m=missedDays(t);if(!m.length)return '';
+  const y=dstr(addDays(t,-1)),l=m[0].day,lb=l===y?'hier':plabel('day',l,true);
+  return '<div class="banner" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span>'+(m.length===1?'Le bilan '+(lb==='hier'?'d’hier':'du '+esc(lb))+' n’est pas fait.':m.length+' bilans en retard (le plus récent : '+esc(lb)+').')+'</span><button class="btn primary" style="min-height:40px" data-act="bj-first">Faire le bilan'+(m.length>1?(lb==='hier'?' d’hier':' du '+esc(lb)):'')+'</button></div>';
 }
 function dueBanner(t){
   const d=dueReview(t);if(!d)return '';
@@ -1188,7 +1228,7 @@ function viewRevue(t){
   });
   if(lv==='week'){
     const qs=quotaList();
-    if(qs.length)h+='<div class="sec-h"><h2>Quotas de la semaine</h2></div><div class="panel">'+qs.map(q=>{const v=(q.values&&q.values[key])||0;return '<div class="pad"><div class="qh"><span class="qt">'+esc(q.title)+(v>=q.target?' <span class="chip ok">Atteint</span>':'')+'</span><span class="qv">'+fmt(v)+' / '+fmt(q.target||0)+' '+unitLabel(q.unit)+'</span></div></div>';}).join('')+'</div>';
+    if(qs.length)h+='<div class="sec-h"><h2>'+ico('bars')+'Quotas de la semaine</h2></div><div class="panel">'+qs.map(q=>{const v=(q.values&&q.values[key])||0;return '<div class="pad"><div class="qh"><span class="qt">'+esc(q.title)+(v>=q.target?' <span class="chip ok">Atteint</span>':'')+'</span><span class="qv">'+fmt(v)+' / '+fmt(q.target||0)+' '+unitLabel(q.unit)+'</span></div></div>';}).join('')+'</div>';
   }
   h+='</section></div><div><section class="sec"><div class="sec-h"><h2>Réflexion</h2>'+(rv.closed?'<span class="chip ok">Revue clôturée</span>':rv.savedAt?'<span class="chip am">Brouillon enregistré</span>':'')+'</div><div class="panel"><div class="pad">';
   const ta=(f,lab,ph)=>'<label class="lab" style="margin:0" for="rf-'+f+'">'+lab+'</label><textarea class="in" id="rf-'+f+'" data-commit="rf" data-field="'+f+'" placeholder="'+ph+'">'+esc(rv[f]||'')+'</textarea>';
@@ -1333,9 +1373,9 @@ function hRow(x,today){
 }
 function habitsToday(t){
   const today=dstr(t),all=hAll(),L=all.filter(h=>hPlanned(h,today));
-  if(!all.length)return '<section class="sec"><div class="sec-h"><h2>Habitudes du jour</h2></div><div class="panel empty"><p>Suis ce que tu répètes : anglais, marche, lecture. La série se construit jour après jour.</p><button class="btn primary" data-act="hnew">Créer une habitude</button></div></section>';
+  if(!all.length)return '<section class="sec"><div class="sec-h"><h2>'+ico('cycle')+'Habitudes du jour</h2></div><div class="panel empty"><p>Suis ce que tu répètes : anglais, marche, lecture. La série se construit jour après jour.</p><button class="btn primary" data-act="hnew">Créer une habitude</button></div></section>';
   const nd=L.filter(h=>hSet(h.id).has(today)).length,pc=L.length?Math.round(nd/L.length*100):0;
-  return '<section class="sec"><div class="sec-h"><h2>Habitudes du jour</h2><span class="aux">'+nd+'/'+L.length+' faites</span></div><div class="panel"><div class="hbar"><i style="width:'+pc+'%"></i></div>'
+  return '<section class="sec"><div class="sec-h"><h2>'+ico('cycle')+'Habitudes du jour</h2><span class="aux">'+nd+'/'+L.length+' faites</span></div><div class="panel"><div class="hbar"><i style="width:'+pc+'%"></i></div>'
     +(L.length?L.map(h=>hRow(h,today)).join(''):'<p class="empty-line">Rien de prévu aujourd’hui. Jour de repos.</p>')
     +'<div class="pad"><button class="link" data-act="tab" data-t="habitudes">Voir le suivi</button></div></div></section>';
 }
@@ -2056,6 +2096,7 @@ function render(){
   {const mb=document.getElementById('me-btn');if(mb)mb.textContent=initials();}
   $('#sheet').innerHTML=ui.sheet?sheetHtml():'';wrapSheet();
   document.body.classList.toggle('lock',!!ui.sheet);
+  {const bb=document.querySelector('.nav button[data-t="bilan"]');if(bb){let dd=bb.querySelector('.bdg');const n=ui.status==='loading'?0:missedDays(t).length;if(n){if(!dd){dd=document.createElement('i');dd.className='bdg';bb.style.position='relative';bb.appendChild(dd);}dd.textContent=n>9?'9+':String(n);dd.setAttribute('aria-label',n+' bilan'+(n>1?'s':'')+' en retard');}else if(dd)dd.remove();}}
   document.querySelectorAll('.nav button').forEach(b=>{if(b.dataset.t===ui.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   const sh=document.querySelector('.sh-body');if(sh&&old)sh.scrollTop=st;
   restoreFocus(fs);
@@ -2210,8 +2251,15 @@ const handlers={
     }
     ui.aiBusy=false;if(ui.sheet===s)render();
   },
+  'bj-prev':()=>{delete ui.draft['bilan-note'];const real=dstr(new Date()),cur=ui.bday||real;ui.bday=dstr(addDays(parseD(cur),-1));render();},
+  'bj-next':()=>{delete ui.draft['bilan-note'];const real=dstr(new Date()),cur=ui.bday||real;const n=dstr(addDays(parseD(cur),1));ui.bday=n<real?n:'';render();},
+  'bj-today':()=>{delete ui.draft['bilan-note'];ui.bday='';render();},
+  'bj-go':b=>{delete ui.draft['bilan-note'];ui.rLevel='day';ui.bday=b.dataset.d;render();window.scrollTo(0,0);},
+  'bj-all':()=>{ui.bjAll=!ui.bjAll;render();},
+  'bj-first':()=>{const m=missedDays(new Date());if(!m.length)return;delete ui.draft['bilan-note'];ui.rLevel='day';ui.bday=m[0].day;setTab('bilan');},
+  'goto-bilan-hier':()=>{delete ui.draft['bilan-note'];ui.rLevel='day';ui.bday=dstr(addDays(new Date(),-1));setTab('bilan');},
   carry:()=>{
-    const t=new Date(),today=dstr(t),tom=dstr(addDays(t,1));
+    const t=ui.bday&&ISO.test(ui.bday)?parseD(ui.bday):new Date(),today=dstr(t),tom=dstr(addDays(t,1));
     const un=items.filter(i=>i.level==='day'&&i.period===today&&!i.dropped&&!i.done);
     un.forEach(i=>save('items',i.id,{period:tom},'update'));
     toast(un.length+' action'+(un.length>1?'s':'')+' reportée'+(un.length>1?'s':'')+' à demain.');
@@ -2389,6 +2437,7 @@ function qBump(id,dir){
   const v={};v[wk]=nv;save('quotas',id,{values:v},'update');
 }
 const commits={
+  bjdate:el=>{const real=dstr(new Date()),v=el.value;if(!ISO.test(v)||+v.slice(0,4)<2000){render();return;}delete ui.draft['bilan-note'];ui.bday=v<real?v:'';render();},
   exc:el=>{
     const kind=el.dataset.kind,ref=el.dataset.ref,v=el.value,key='x_'+ref;
     if(!v){save('excuses',key,null,'delete');return;}
@@ -2499,9 +2548,16 @@ const submits={
     ui.sheet={type:'item',id:it.id};render();toast(n+' ligne'+(n>1?'s':'')+' créée'+(n>1?'s':'')+'.');
   },
   review:()=>{
-    const t=new Date(),today=dstr(t);
+    const t=ui.bday&&ISO.test(ui.bday)?parseD(ui.bday):new Date(),today=dstr(t);
     const a=items.filter(i=>i.level==='day'&&i.period===today&&!i.dropped),d=a.filter(i=>i.done).length;
     save('reviews',today,{note:(ui.draft['bilan-note']!==undefined?ui.draft['bilan-note']:((mem.reviews[today]||{}).note||'')),done:d,total:a.length,score:a.length?d/a.length:0,savedAt:Date.now()},'set');
+    if(ui.bday&&ISO.test(ui.bday)){
+      const rem=missedDays(new Date()).filter(m=>m.day!==today);
+      delete ui.draft['bilan-note'];
+      if(rem.length){ui.bday=rem[0].day;toast('Bilan enregistré. Il en reste '+rem.length+' à faire.');}
+      else{ui.bday='';toast('Bilan enregistré. Tous tes bilans sont à jour.');}
+      render();window.scrollTo(0,0);return;
+    }
     toast('Bilan enregistré.');
   },
   bud:()=>{
@@ -2543,7 +2599,7 @@ const submits={
   daywin:()=>{
     const text=(ui.draft['bw-text']||'').trim();
     if(!text){toast('Écris ta victoire.');return;}
-    addWin(text,dstr(new Date()),'','');delete ui.draft['bw-text'];toast('Victoire enregistrée. Bravo.');render();
+    addWin(text,ui.bday&&ISO.test(ui.bday)?ui.bday:dstr(new Date()),'','');delete ui.draft['bw-text'];toast('Victoire enregistrée. Bravo.');render();
   },
   newquota:()=>{
     const title=(ui.draft['qn-title']||'').trim(),target=parseFloat(String(ui.draft['qn-target']||'').replace(/\s/g,'').replace(',','.')),unit=ui.draft['qn-unit']||'h';
