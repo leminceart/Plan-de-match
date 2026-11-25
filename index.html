@@ -60,6 +60,27 @@ h1{font:600 25px/1.15 var(--font);margin:2px 0 2px;text-wrap:balance}
 .sec{margin-top:20px}
 .sec-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}
 .sec-h h2{font:600 17px var(--font);margin:0}
+
+.mdash .rings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.mring{background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px 6px 10px;text-align:center;min-width:0}
+.mring .ring{width:84px;height:84px}
+.mring .lb{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);margin-top:4px}
+.mring .sb{font-size:12px;color:var(--muted);margin-top:2px;min-height:18px}
+.rfill.ok{stroke:var(--ok)}.rfill.warn{stroke:var(--warn)}.rfill.ko{stroke:var(--ko)}
+.dbars{display:flex;align-items:flex-end;gap:2px;height:92px}
+.dbars .c{flex:1;min-width:0;height:100%;position:relative}
+.dbars .p{position:absolute;left:0;right:0;bottom:0;background:var(--track);border-radius:2px 2px 0 0}
+.dbars .dn{position:absolute;left:0;right:0;bottom:0;background:var(--li);border-radius:2px 2px 0 0}
+.dax{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.lgd{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.heat{display:grid;gap:3px;max-width:440px}
+.heat b{display:block;aspect-ratio:1;border-radius:3px;background:var(--track);position:relative;overflow:hidden}
+.heat b i{position:absolute;inset:0;background:var(--li)}
+.heat b.now{outline:2px solid var(--fg);outline-offset:-2px}
+.drow{padding:10px 14px;border-top:1px solid var(--line2)}.drow:first-child{border-top:0}
+.drow .qh b{font-weight:600}
+.mdash .hint2{font-size:12.5px;color:var(--muted);margin:6px 0 0;line-height:1.4}
 .ti{width:18px;height:18px;margin-right:8px;vertical-align:-3px;opacity:.5;flex:none}
 .grp .ti{width:14px;height:14px;margin-right:6px;vertical-align:-2px;opacity:.6}
 .aux{color:var(--muted);font-size:13px}
@@ -1461,7 +1482,7 @@ function dayWord(ds){const t=new Date(),d=dstr(t);if(ds===dstr(addDays(t,-1)))re
 function excuseBanner(t){
   const P=pendingExcuses(t);if(!P.length)return '';
   return '<section class="sec"><div class="sec-h"><h2>À expliquer</h2><span class="aux">'+P.length+' non fait'+(P.length>1?'s':'')+'</span></div><div class="panel"><div class="pad" style="padding-bottom:0"><p class="hint" style="margin:0">Dis pourquoi, en un geste. Ces raisons nourrissent l’analyse dans Synthèse.</p></div>'
-    +P.slice(0,6).map(x=>'<div class="exrow"><div class="exh"><b>'+esc(x.title)+'</b><small>'+dayWord(x.date)+' · '+esc(x.tag)+'</small></div><select class="in" data-commit="exc" data-kind="'+x.kind+'" data-ref="'+esc(x.ref)+'"'+(x.h?' data-h="'+x.h+'" data-d="'+x.date+'"':'')+' aria-label="Pourquoi : '+esc(x.title)+'">'+reasonOpts('')+'</select>'+(x.kind==='item'?'<button class="link" data-act="exc-today" data-id="'+x.id+'">Reporter à aujourd’hui</button>':'')+'</div>').join('')
+    +P.slice(0,6).map(x=>'<div class="exrow"><div class="exh"><b>'+esc(x.title)+'</b><small>'+dayWord(x.date)+' · '+esc(x.tag)+'</small></div><select class="in" data-commit="exc" data-kind="'+x.kind+'" data-ref="'+esc(x.ref)+'"'+(x.h?' data-h="'+x.h+'" data-d="'+x.date+'"':'')+' aria-label="Pourquoi : '+esc(x.title)+'">'+reasonOpts('')+'</select>'+(x.kind==='item'?'<div style="display:flex;gap:16px;flex-wrap:wrap"><button class="link" data-act="exc-done" data-id="'+x.id+'">Je l’ai fait : valider</button><button class="link" data-act="exc-today" data-id="'+x.id+'">Reporter à aujourd’hui</button></div>':x.h?'<button class="link" data-act="exc-hdone" data-h="'+x.h+'" data-d="'+x.date+'">Je l’ai fait : valider</button>':'')+'</div>').join('')
     +(P.length>6?'<p class="hint" style="padding:0 14px 12px;margin:0">+ '+(P.length-6)+' autres, après celles-ci.</p>':'')+'</div></section>';
 }
 function excuseBlock(it){
@@ -1816,6 +1837,85 @@ function sheetModel(){
    +'<div><label class="lab" for="m-dom">Domaine</label><select class="in" id="m-dom" data-commit="mdom" data-id="'+id+'"><option value="">Aucun</option>'+getDomains().map(d=>'<option'+(m.domain===d?' selected':'')+'>'+esc(d)+'</option>').join('')+'</select></div></div>';
   h+='<div class="btns"><button class="btn" data-act="mactive" data-id="'+id+'">'+(m.active===false?'Reprendre':'Mettre en pause')+'</button>'+(ui.confirmDel==='m'+id?'<button class="btn danger" data-act="mdel-yes" data-id="'+id+'">Confirmer la suppression</button>':'<button class="btn" data-act="mdel" data-id="'+id+'">Supprimer</button>')+'</div><p class="hint">Supprimer ou mettre en pause n’efface pas les actions déjà créées.</p></div>';
   return h;
+}
+
+function metricsData(t,n){
+  const end=dstr(t),start=dstr(addDays(t,-(n-1))),pEnd=dstr(addDays(t,-n)),pStart=dstr(addDays(t,-(2*n-1)));
+  const acts=items.filter(i=>i.level==='day'&&!i.dropped&&ISO.test(i.period));
+  const counted=i=>i.period<end||i.done;
+  const sel=(a,b)=>acts.filter(i=>i.period>=a&&i.period<=b&&counted(i));
+  const cur=sel(start,end),prev=sel(pStart,pEnd),done=cur.filter(i=>i.done);
+  const rate=l=>l.length?l.filter(i=>i.done).length/l.length:null;
+  const M={n:n,start:start,end:end,cur:cur,done:done,rate:rate(cur),prevRate:rate(prev)};
+  M.days=[];for(let k=n-1;k>=0;k--){const d=dstr(addDays(t,-k)),a=cur.filter(i=>i.period===d);M.days.push({d:d,done:a.filter(i=>i.done).length,tot:a.length});}
+  M.active=M.days.filter(x=>x.done>0).length;
+  const tops=cur.filter(i=>i.top);M.tops={d:tops.filter(i=>i.done).length,t:tops.length};
+  M.reviews=Object.keys(mem.reviews).filter(k=>k>=start&&k<=end&&mem.reviews[k]&&mem.reviews[k].savedAt).length;
+  M.minutes=done.reduce((x,i)=>x+(Number(i.dur)||0),0);
+  M.perWeek=M.minutes/(n/7);
+  const al=done.filter(i=>i.parentId&&byId.has(i.parentId)&&!byId.get(i.parentId).dropped);
+  M.align=done.length?al.length/done.length:null;
+  const strat=items.filter(i=>(i.level==='year'||i.level==='quarter')&&!i.dropped&&overlap(range(i.level,i.period),[start,end]));
+  const touched=new Set();done.forEach(i=>ancestors(i).forEach(a=>touched.add(a.id)));
+  M.strat=strat.map(i=>({i:i,touched:touched.has(i.id),p:pace(i)}));
+  M.touchedRate=strat.length?M.strat.filter(x=>x.touched).length/strat.length:null;
+  const yr=String(t.getFullYear());let wsrc=items.filter(i=>i.level==='year'&&!i.dropped&&i.period===yr);
+  if(!wsrc.length)wsrc=strat;
+  const W={};wsrc.forEach(i=>{const d=domainOf(i);if(d!=='Autre')W[d]=(W[d]||0)+1;});
+  const E={};done.forEach(i=>{const d=domainOf(i);E[d]=(E[d]||0)+1;});
+  const tw=Object.values(W).reduce((x,y)=>x+y,0),te=done.length;
+  M.dom=getDomains().concat(['Autre']).map(d=>({d:d,w:tw&&W[d]?W[d]/tw:0,e:te&&E[d]?E[d]/te:0})).filter(x=>x.w>0||x.e>0);
+  M.balance=(tw&&te)?M.dom.reduce((x,y)=>x+Math.min(y.w,y.e),0):null;
+  const parts=[M.align,M.touchedRate,M.balance].filter(v=>v!=null);
+  M.coh=parts.length?parts.reduce((x,y)=>x+y,0)/parts.length:null;
+  return M;
+}
+function metricsDash(t){
+  const n=ui.mRange||30,M=metricsData(t,n);
+  const tone=p=>p==null?'':p>=.7?'ok':p>=.4?'warn':'ko';
+  const pct=p=>p==null?'—':Math.round(p*100)+'%';
+  const dl=(a,b)=>a==null||b==null?'':(a-b>=.005?'<span class="chip ok">▲ '+Math.round((a-b)*100)+' pts</span>':b-a>=.005?'<span class="chip ko">▼ '+Math.round((b-a)*100)+' pts</span>':'<span class="chip">stable</span>');
+  const ring=(p,lab,sub)=>{const C=2*Math.PI*42,v=p==null?0:Math.max(0,Math.min(1,p));return '<div class="mring"><svg class="ring" viewBox="0 0 100 100" role="img" aria-label="'+esc(lab)+' : '+(p==null?'pas de donnée':Math.round(v*100)+' pour cent')+'"><circle class="rtrack" cx="50" cy="50" r="42"/><circle class="rfill '+tone(p)+'" cx="50" cy="50" r="42" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+(C*(1-v)).toFixed(1)+'" transform="rotate(-90 50 50)"/><text class="rtxt" x="50" y="57" text-anchor="middle">'+pct(p)+'</text></svg><div class="lb">'+esc(lab)+'</div><div class="sb">'+sub+'</div></div>';};
+  let h='<section class="sec mdash"><div class="sec-h"><h2>'+ico('bars')+'Tableau de bord</h2><span class="aux">'+fmtDate(M.start)+' au '+fmtDate(M.end)+'</span></div>';
+  h+='<div class="seg" style="grid-template-columns:repeat(3,1fr)" role="group" aria-label="Période">'+[7,30,90].map(x=>'<button data-act="m-range" data-n="'+x+'" aria-pressed="'+(x===n)+'">'+x+' jours</button>').join('')+'</div>';
+  h+='<div class="sec-h2"><h4>Ma productivité</h4></div><div class="rings">'
+    +ring(M.rate,'Réalisation',M.cur.length?M.done.length+' sur '+M.cur.length+' · '+dl(M.rate,M.prevRate):'Aucune action')
+    +ring(M.active/n,'Jours actifs',M.active+' sur '+n+' j')
+    +ring(M.tops.t?M.tops.d/M.tops.t:null,'Essentiels',M.tops.t?M.tops.d+' sur '+M.tops.t:'Aucun posé')+'</div>';
+  // barres par jour ou par semaine
+  const bs=n>30?7:1,bk=[];for(let k=0;k<M.days.length;k+=bs){const g=M.days.slice(k,k+bs);bk.push({d:g[0].d,done:g.reduce((x,y)=>x+y.done,0),tot:g.reduce((x,y)=>x+y.tot,0)});}
+  const mx=Math.max(1,...bk.map(x=>x.tot));
+  h+='<div class="panel" style="margin-top:8px"><div class="pad"><b>Actions '+(bs>1?'par semaine':'par jour')+'</b><div class="dbars" role="img" aria-label="Actions faites et prévues '+(bs>1?'par semaine':'par jour')+'" style="margin-top:10px">'
+    +bk.map(x=>'<div class="c" title="'+esc(fmtDate(x.d))+' : '+x.done+' faite'+(x.done>1?'s':'')+' sur '+x.tot+'"><div class="p" style="height:'+Math.round(x.tot/mx*100)+'%"></div><div class="dn" style="height:'+Math.round(x.done/mx*100)+'%"></div></div>').join('')
+    +'</div><div class="dax"><span>'+esc(fmtDate(M.start))+'</span><span>'+esc(fmtDate(M.end))+'</span></div><div class="lgd"><span><i style="background:var(--li)"></i>Faites</span><span><i style="background:var(--track)"></i>Prévues</span></div></div></div>';
+  // grille des jours
+  const cols=n<=7?7:n<=30?10:15,md=Math.max(1,...M.days.map(x=>x.done));
+  h+='<div class="panel" style="margin-top:8px"><div class="pad"><b>Mes jours actifs</b><div class="heat" style="grid-template-columns:repeat('+cols+',1fr);margin-top:10px" role="img" aria-label="'+M.active+' jours actifs sur '+n+'">'
+    +M.days.map(x=>'<b'+(x.d===M.end?' class="now"':'')+' title="'+esc(fmtDate(x.d))+' : '+x.done+' faite'+(x.done>1?'s':'')+'">'+(x.done?'<i style="opacity:'+(.3+.7*x.done/md).toFixed(2)+'"></i>':'')+'</b>').join('')
+    +'</div><p class="hint2">Une case = un jour. Plus elle est foncée, plus tu as fait d’actions ce jour-là.</p></div></div>';
+  h+='<div class="kcards" style="margin-top:8px">'+kc(M.done.length,'Actions faites')+kc(M.reviews+'/'+n,'Bilans faits')+kc(M.minutes?(M.perWeek/60).toFixed(1).replace('.',',')+' h':'—','Temps / semaine')+'</div>';
+  // cohérence stratégique
+  h+='<div class="sec-h2"><h4>Cohérence avec mes objectifs stratégiques</h4></div><div class="rings">'
+    +ring(M.coh,'Cohérence',M.coh==null?'Pas assez de données':(M.coh>=.7?'Tu restes sur ta route':M.coh>=.4?'Quelques écarts':'Tu t’éloignes'))
+    +ring(M.align,'Alignement',M.done.length?'actions rattachées':'Aucune action')
+    +ring(M.touchedRate,'Objectifs touchés',M.strat.length?M.strat.filter(x=>x.touched).length+' sur '+M.strat.length:'Aucun objectif')+'</div>';
+  h+='<div class="panel" style="margin-top:8px"><div class="pad"><b>Effort par domaine, comparé à ce que tu vises</b><p class="hint2" style="margin-top:2px">La barre = part de tes actions faites. Le trait = poids du domaine dans tes objectifs de l’année.</p></div>';
+  if(!M.dom.length)h+='<p class="empty-line">Pas encore de domaine à comparer. Pose des objectifs d’année et coche des actions.</p>';
+  else h+=M.dom.map(x=>{const diff=x.e-x.w,chip=x.w===0?'<span class="chip warn">Hors objectifs</span>':diff<-.1?'<span class="chip warn">Sous-investi</span>':diff>.2?'<span class="chip warn">Surinvesti</span>':'<span class="chip ok">Équilibré</span>';
+    return '<div class="drow"><div class="qh"><b>'+swatch(x.d)+esc(x.d)+'</b><span class="qv">effort '+Math.round(x.e*100)+' % · visé '+Math.round(x.w*100)+' %</span></div><span class="bar"><i style="width:'+Math.round(x.e*100)+'%;background:'+domColor(x.d)+'"></i>'+(x.w>0?'<b class="mk" style="left:'+Math.round(x.w*100)+'%"></b>':'')+'</span><div class="meta">'+chip+'</div></div>';}).join('');
+  h+='</div>';
+  if(M.strat.length){
+    h+='<div class="panel" style="margin-top:8px"><div class="pad"><b>Mes objectifs stratégiques</b><p class="hint2" style="margin-top:2px">Années et trimestres en cours. « Travaillé » = au moins une action faite en dessous sur la période.</p></div>'
+      +M.strat.map(x=>{const pr=Math.round(prog(x.i)*100);return '<button class="grow" data-act="open" data-id="'+x.i.id+'"><span class="gt">'+esc(x.i.title)+'</span><span class="pc">'+pr+'%</span><span class="chain">'+esc(plabel(x.i.level,x.i.period,true))+' · '+(x.p?'<span class="chip '+x.p.cls+'">'+x.p.label+'</span> ':'')+(x.touched?'<span class="chip ok">Travaillé</span>':'<span class="chip warn">Aucune action sur '+n+' j</span>')+'</span></button>';}).join('')+'</div>';
+  }
+  h+='<details style="margin-top:10px"><summary class="link" style="cursor:pointer">Comment ces chiffres sont calculés</summary><ul class="hint" style="padding-left:18px;margin:8px 0">'
+    +'<li><b>Réalisation</b> : actions cochées ÷ actions prévues sur la période (les actions d’aujourd’hui non faites ne comptent pas encore). La flèche compare à la période d’avant.</li>'
+    +'<li><b>Jours actifs</b> : jours avec au moins une action faite.</li><li><b>Essentiels</b> : part des « 3 essentiels » tenus.</li>'
+    +'<li><b>Alignement</b> : part de tes actions faites rattachées à un objectif.</li>'
+    +'<li><b>Objectifs touchés</b> : objectifs d’année et de trimestre en cours avec au moins une action faite en dessous.</li>'
+    +'<li><b>Équilibre</b> : ressemblance entre ta répartition d’effort par domaine et le poids de chaque domaine dans tes objectifs d’année.</li>'
+    +'<li><b>Cohérence</b> : moyenne de l’alignement, des objectifs touchés et de l’équilibre. Vert dès 70 %.</li></ul></details>';
+  return h+'</section>';
 }
 function viewSynth(t){
   const lv=ui.cLevel,key=ui.ckeys[lv],today=dstr(t),cur=keyOf(lv,t)===key;
@@ -2189,6 +2289,17 @@ const handlers={
   tab:b=>setTab(b.dataset.t),
   close:()=>{ui.sheet=null;ui.confirmDel=null;render();},
   open:b=>{ui.sheet={type:'item',id:b.dataset.id};ui.confirmDel=null;render();},
+  'exc-done':b=>{
+    const it=byId.get(b.dataset.id);if(!it)return;
+    const at=ISO.test(it.period)?parseD(it.period).getTime()+12*3600000:Date.now();
+    save('items',it.id,{done:true,doneAt:at},'update');
+    toast('Validée pour '+dayWord(it.period)+'.',{fn:()=>save('items',it.id,{done:false,doneAt:null},'update')});
+  },
+  'exc-hdone':b=>{
+    const hid=b.dataset.h,d=b.dataset.d,k=hkey(hid,d);
+    if(!mem.hlog[k])save('hlog',k,{h:hid,d:d,at:Date.now()},'set');
+    toast('Validée pour '+dayWord(d)+'.',{fn:()=>save('hlog',k,null,'delete')});
+  },
   toggle:b=>{const it=byId.get(b.dataset.id);if(!it)return;const pd=!!it.done,pa=it.doneAt===undefined?null:it.doneAt;save('items',it.id,{done:!pd,doneAt:!pd?Date.now():null},'update');toast(pd?'Marquée non faite.':'Faite.',{fn:()=>save('items',it.id,{done:pd,doneAt:pa},'update')});},
   lvl:b=>{ui.level=b.dataset.l;render();},
   prev:()=>{ui.keys[ui.level]=shiftKey(ui.level,ui.keys[ui.level],-1);render();},
@@ -2409,6 +2520,7 @@ const handlers={
   mactive:b=>{const m=mem.models[b.dataset.id];if(m)save('models',b.dataset.id,{active:m.active===false},'update');},
   mdel:b=>{ui.confirmDel='m'+b.dataset.id;render();},
   'mdel-yes':b=>{save('models',b.dataset.id,null,'delete');ui.sheet={type:'models'};ui.confirmDel=null;if(!db)render();toast('Action récurrente supprimée.');},
+  'm-range':b=>{ui.mRange=Number(b.dataset.n)||30;render();},
   'c-lvl':b=>{ui.cLevel=b.dataset.l;render();},
   'c-prev':()=>{ui.ckeys[ui.cLevel]=shiftKey(ui.cLevel,ui.ckeys[ui.cLevel],-1);render();},
   'c-next':()=>{ui.ckeys[ui.cLevel]=shiftKey(ui.cLevel,ui.ckeys[ui.cLevel],1);render();},
