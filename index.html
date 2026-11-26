@@ -269,6 +269,30 @@ select.in{padding-right:8px}
 .tgl{width:48px;height:28px;border-radius:14px;border:0;background:var(--track);position:relative;flex:none;padding:0}
 .tgl::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--paper);transition:transform .15s}
 .tgl[aria-pressed="true"]{background:var(--li)}.tgl[aria-pressed="true"]::after{transform:translateX(20px)}
+.thist{display:grid;gap:10px;border-left:2px solid var(--line);padding-left:12px;margin:6px 0 12px}.th{display:grid;gap:2px}.th select{min-height:38px;font-size:13px}.rpt{color:var(--warn);font-weight:700}
+.tk3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.tk{border-radius:6px;padding:12px 8px;text-align:center}.tk b{display:block;font-size:28px;line-height:1.1}.tk span{font-size:12px}.tk.w1{background:var(--warn-l);color:var(--warn)}.tk.w2{background:var(--ko-l);color:var(--ko)}.tk.w3{background:var(--field);color:var(--muted)}
+
+.nfab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;width:52px;height:52px;border-radius:50%;border:0;background:var(--li);color:var(--on-li,#fff);box-shadow:0 3px 10px rgba(0,0,0,.28);display:grid;place-items:center;padding:0;min-height:0}
+.nfab:active{transform:scale(.92)}
+body.lock .nfab{display:none}
+.wrap{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.note{padding:12px 14px;margin-top:8px}.note .ntx{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0 8px}.note .nbt{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.fxf{position:fixed;z-index:90;font-weight:800;color:var(--ok);pointer-events:none;font-size:16px}
+.fxc{position:fixed;inset:0;z-index:95;pointer-events:none;overflow:hidden}.fxc i{position:absolute;top:0;width:8px;height:12px;border-radius:2px}
+.fxs{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:#e6a919;pointer-events:none}
+.star{position:relative}
+.act.fx-pop .chk::before{animation:fxpop .42s cubic-bezier(.2,1.6,.4,1)}
+.act.fx-pop .chk::after{animation:fxtick .3s .1s ease-out both}
+.act.fx-pop .t{text-decoration:none;background:linear-gradient(currentColor,currentColor) 0 55%/0% 2px no-repeat;animation:fxstrike .36s .1s ease-out forwards}
+.act.fx-pop .chk{overflow:visible}
+@keyframes fxpop{0%{transform:scale(.6)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes fxtick{from{opacity:0;transform:rotate(45deg) scale(.3)}to{opacity:1;transform:rotate(45deg) scale(1)}}
+@keyframes fxstrike{to{background-size:100% 2px}}
+.toast:not([hidden]){animation:fxtoast .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes fxtoast{from{opacity:0;transform:translateX(-50%) translateY(18px)}to{opacity:1;transform:translateX(-50%)}}
+.fx-off .toast,.fx-off .fx-pop *{animation:none!important}
+@media (prefers-reduced-motion:reduce){.toast,.fx-pop *{animation:none!important}.nfab:active{transform:none}}
+.gb{transform-origin:left center}
 .exrow{display:grid;gap:6px;padding:10px 14px;border-top:1px solid var(--line2)}.exh{display:grid;gap:1px}.exh small{color:var(--muted);font-size:12px}.exrow .link{justify-self:start}
 .rdv-b{width:100%;text-align:left;border:0;background:none;font:inherit;color:inherit;min-height:44px;cursor:pointer}.rdv-b:active{background:var(--hover)}
 .hnote{background:var(--li-l);color:var(--li-d);border-radius:4px;padding:12px 14px;font-size:13px;line-height:1.4;margin-top:14px}
@@ -322,10 +346,10 @@ select.in{padding-right:8px}
 .bl .a{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:13px;color:var(--muted)}
 .bl .a b{color:var(--fg);font-size:15px}
 .dec{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:0 14px 8px}
-.dec button{min-height:40px;border:1px solid var(--line);background:var(--paper);border-radius:4px;font-weight:600;font-size:13px;color:var(--muted)}
+.dec button{min-width:0;width:auto;height:auto;min-height:40px;padding:0 4px;white-space:nowrap;border:1px solid var(--line);background:var(--paper);border-radius:4px;font-weight:600;font-size:13px;color:var(--muted)}
 .dec button[aria-pressed="true"].c{background:var(--ok-l);color:var(--ok);border-color:var(--ok)}
 .dec button[aria-pressed="true"].a{background:var(--warn-l);color:var(--warn);border-color:var(--warn)}
-.dec button[aria-pressed="true"].x{background:var(--ko-l);color:var(--ko);border-color:var(--ko)}
+.dec button[aria-pressed="true"].ab{background:var(--ko-l);color:var(--ko);border-color:var(--ko)}
 .dpad{padding:0 14px 12px}
 .sw{display:inline-block;width:10px;height:10px;border-radius:2px;flex:none;margin-right:6px}
 .pie{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
@@ -646,6 +670,7 @@ setTimeout(pull,900);
 </div></div>
 <div class="wrap"><div id="main"></div></div>
 
+<button class="nfab" data-act="notes-open" aria-label="Notes"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9a2.1 2.1 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg></button>
 <div id="sheet"></div>
 <div id="toast" class="toast" role="status" hidden></div><div class="miclive" id="miclive" role="status" aria-live="polite" hidden><span class="dot"></span><span class="tx"></span><button class="btn" data-act="micstop">Arrêter</button></div>
 
@@ -743,7 +768,7 @@ const fmt=n=>{n=Math.round((Number(n)||0)*10)/10;const parts=String(Math.abs(n))
 const newId=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 // ---------- état ----------
-const mem={items:{},quotas:{},agenda:{},reviews:{},profile:{},wins:{},budget:{},revues:{},models:{},habits:{},hlog:{},excuses:{}};
+const mem={items:{},quotas:{},agenda:{},reviews:{},profile:{},wins:{},budget:{},revues:{},models:{},habits:{},hlog:{},excuses:{},traces:{},notes:{}};
 let items=[],byId=new Map(),kids=new Map();let hCache=null;
 const ui={tab:'aujourdhui',level:'week',keys:{},sheet:null,draft:{},qaCat:'tache',newCat:'tache',status:'loading',readOnly:false,canSample:false,aiBusy:false,confirmDel:null};
 LEVELS.forEach(l=>{ui.keys[l]=keyOf(l,new Date());});
@@ -884,8 +909,20 @@ function winRow(w){
 function ancestors(i){const out=[];let c=i,n=0;while(c&&c.parentId&&byId.has(c.parentId)&&n++<6){c=byId.get(c.parentId);out.push(c);}return out;}
 function parentCands(level,key){
   const idx=LEVELS.indexOf(level);if(idx<=0)return [];
-  const up=LEVELS[idx-1],r=range(level,key);
-  return items.filter(i=>i.level===up&&!i.dropped&&overlap(range(up,i.period),r)).sort((a,b)=>a.period<b.period?-1:a.period>b.period?1:ord(a,b));
+  const r=range(level,key),up=LEVELS.slice(0,idx);
+  return items.filter(i=>up.indexOf(i.level)>=0&&!i.dropped&&overlap(range(i.level,i.period),r)).sort((a,b)=>(LEVELS.indexOf(b.level)-LEVELS.indexOf(a.level))||(a.period<b.period?-1:a.period>b.period?1:ord(a,b)));
+}
+function parentDefault(level,key){
+  const idx=LEVELS.indexOf(level);if(idx<=0)return '';
+  const c=parentCands(level,key).filter(x=>x.level===LEVELS[idx-1]);return c.length===1?c[0].id:'';
+}
+function parentOpts(cands,cur){
+  let h='';
+  LEVELS.slice().reverse().forEach(l=>{
+    const g=cands.filter(c=>c.level===l);if(!g.length)return;
+    h+='<optgroup label="'+(l==='year'?'Objectifs de l’année':l==='quarter'?'Objectifs du trimestre':l==='month'?'Objectifs du mois':'Objectifs de la semaine')+'">'+g.map(c=>'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+esc(plabel(l,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</optgroup>';
+  });
+  return h;
 }
 function defaultChildPeriod(it){
   const cl=LEVELS[LEVELS.indexOf(it.level)+1];
@@ -923,7 +960,7 @@ function addItem(o){
   return id;
 }
 let tt;
-function toast(m,u){const el=$('#toast');el.textContent=m;if(u){const b=document.createElement('button');b.type='button';b.className='tu';b.textContent=u.label||'Annuler';b.onclick=()=>{el.hidden=true;clearTimeout(tt);u.fn();};el.appendChild(b);}el.hidden=false;clearTimeout(tt);tt=setTimeout(()=>{el.hidden=true;},u?5500:3400);}
+function toast(m,u){const el=$('#toast');el.textContent=m;if(u){const b=document.createElement('button');b.type='button';b.className='tu';b.textContent=u.label||'Annuler';b.onclick=()=>{el.hidden=true;clearTimeout(tt);u.fn();};el.appendChild(b);}el.hidden=false;el.style.animation='none';void el.offsetWidth;el.style.animation='';clearTimeout(tt);tt=setTimeout(()=>{el.hidden=true;},u?5500:3400);}
 
 // ---------- vues ----------
 function chainHtml(i){
@@ -945,16 +982,17 @@ function actRow(i){
   const parts=[];
   if(i.dur)parts.push(i.dur+' min');
   if(i.prio==='haute')parts.push('<span class="hi">Priorité haute</span>');
+  {const rn=trCount(i.id);if(rn)parts.push('<span class="rpt">↻ reporté '+rn+' fois</span>');}
   const par=i.parentId&&byId.get(i.parentId);
   parts.push(par?'→ '+esc(trunc(par.title,34)):'<em class="warn">Hors objectif</em>');
   return '<div class="act'+(i.done?' is-done':'')+'"><button class="chk" data-act="toggle" data-id="'+i.id+'" aria-pressed="'+!!i.done+'" aria-label="'+(i.done?'Marquer non fait':'Marquer fait')+'"></button><button class="atx" data-act="open" data-id="'+i.id+'"><span class="t">'+esc(i.title)+'</span><span class="m">'+parts.join(' · ')+'</span></button><button class="star" data-act="star" data-id="'+i.id+'" aria-pressed="'+!!i.top+'" aria-label="Essentiel du jour">'+(i.top?'★':'☆')+'</button></div>';
 }
 function qaParent(goals){const v=ui.draft['qa-parent'];if(v!==undefined)return v;return goals.length===1?goals[0].id:'';}
 function quickAdd(goals){
-  const par=qaParent(goals);
+  const par=qaParent(goals),others=parentCands('day',dstr(new Date())).filter(c=>c.level!=='week');
   return '<form class="qa" data-submit="quick"><div class="mf"><input class="in" id="qa-title" data-draft="qa-title" value="'+esc(dv('qa-title'))+'" placeholder="Nouvelle action…" autocomplete="off" enterkeyhint="done" aria-label="Nouvelle action">'+micBtn('qa-title')+'</div>'
    +'<div class="qa-row"><div class="chips" role="group" aria-label="Catégorie">'+Object.keys(CAT1).map(k=>'<button type="button" data-act="qa-cat" data-v="'+k+'" aria-pressed="'+(ui.qaCat===k)+'">'+CAT1[k]+'</button>').join('')+'</div>'
-   +'<select class="in" id="qa-parent" data-draft="qa-parent" aria-label="Objectif de la semaine"><option value="">Objectif de la semaine…</option>'+goals.map(g=>'<option value="'+g.id+'"'+(g.id===par?' selected':'')+'>'+esc(trunc(g.title,50))+'</option>').join('')+'</select></div>'
+   +'<select class="in" id="qa-parent" data-draft="qa-parent" aria-label="Objectif visé"><option value="">Objectif de la semaine ou plus large…</option>'+goals.map(g=>'<option value="'+g.id+'"'+(g.id===par?' selected':'')+'>'+esc(trunc(g.title,50))+'</option>').join('')+(others.length?parentOpts(others,par):'')+'</select></div>'
    +'<button class="btn primary" type="submit">Ajouter l’action</button></form>';
 }
 function agendaFor(day){return (mem.agenda[day]&&mem.agenda[day].events)||[];}
@@ -1259,7 +1297,7 @@ function setDecision(itemId,kind){
   if(old.kind===kind){delete dm[itemId];if(kind==='abandonner'&&it&&it.dropped)save('items',itemId,{dropped:false,dropReason:''},'update');}
   else{
     dm[itemId]={kind:kind,reason:old.reason||''};
-    if(it){if(kind==='abandonner')save('items',itemId,{dropped:true,dropReason:old.reason||''},'update');else if(old.kind==='abandonner'&&it.dropped)save('items',itemId,{dropped:false,dropReason:''},'update');}
+    if(it){if(kind==='abandonner'){if(!it.dropped)trLog({kind:'abandonne',what:'item',ref:it.id,title:it.title,from:ISO.test(it.period)?it.period:'',note:old.reason||''});save('items',itemId,{dropped:true,dropReason:old.reason||''},'update');}else if(old.kind==='abandonner'&&it.dropped)save('items',itemId,{dropped:false,dropReason:''},'update');}
   }
   saveRevue(lv,k,{decisions:dm});
 }
@@ -1340,7 +1378,7 @@ function viewRevue(t){
   h+='<div class="cols" style="margin-top:6px"><div><section class="sec"><div class="sec-h"><h2>Objectifs et décisions</h2><span class="aux">'+objs.length+'</span></div>';
   if(!objs.length)h+='<div class="panel"><p class="empty-line">Aucun objectif sur cette période.</p></div>';
   objs.forEach(o=>{
-    const d=dm[o.id]||{},kinds=[['continuer','c','Continuer'],['ajuster','a','Ajuster'],['abandonner','x','Abandonner']];
+    const d=dm[o.id]||{},kinds=[['continuer','c','Continuer'],['ajuster','a','Ajuster'],['abandonner','ab','Abandonner']];
     h+='<div class="panel" style="margin-bottom:10px">'+goalRow(o)+(o.dropped?'<div class="dpad"><span class="chip ko">Abandonné</span></div>':'')
       +'<div class="dec" role="group" aria-label="Décision">'+kinds.map(k=>'<button class="'+k[1]+'" data-act="dec" data-id="'+o.id+'" data-k="'+k[0]+'" aria-pressed="'+(d.kind===k[0])+'">'+k[2]+'</button>').join('')+'</div>';
     if(d.kind)h+='<div class="dpad"><input class="in" id="dr-'+o.id+'" data-commit="dreason" data-id="'+o.id+'" value="'+esc(d.reason||'')+'" placeholder="Pourquoi ? (facultatif)">'+(d.kind==='ajuster'?'<button class="link" data-act="open" data-id="'+o.id+'">Ouvrir pour ajuster</button>':'')+'</div>';
@@ -1571,6 +1609,146 @@ const REASONS=[['temps','Manque de temps'],['urgence','Urgence ou imprévu profe
 const REASONL={};REASONS.forEach(r=>{REASONL[r[0]]=r[1];});
 const reasonOpts=cur=>'<option value="">'+(cur?'Aucune excuse':'Pourquoi ?')+'</option>'+REASONS.map(r=>'<option value="'+r[0]+'"'+(cur===r[0]?' selected':'')+'>'+esc(r[1])+'</option>').join('');
 const exOf=ref=>mem.excuses['x_'+ref];
+
+
+// ---------- notes libres ----------
+function noteList(){return Object.keys(mem.notes).map(k=>Object.assign({id:k},mem.notes[k])).filter(n=>n&&n.text).sort((a,b)=>(b.at||0)-(a.at||0));}
+const dayLong=d=>cap(DAYS[d.getDay()])+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+const hhmm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
+function sheetNotes(){
+  const L=noteList(),q=(ui.draft['note-q']||'').trim().toLowerCase(),F=q?L.filter(n=>n.text.toLowerCase().indexOf(q)>=0):L;
+  let h=head('Notes','Notes')+'<p class="hint">Jette ici une idée, une pensée, sans structure. La date et l’heure s’ajoutent toutes seules.</p>';
+  h+='<label class="lab" for="note-new" style="margin-top:0">Nouvelle note</label><div class="mf"><textarea class="in" id="note-new" data-draft="note-new" rows="4" placeholder="Écris ou dicte…">'+esc(dv('note-new'))+'</textarea>'+micBtn('note-new')+'</div>';
+  h+='<div class="btns"><button class="btn primary" type="button" data-act="note-add">Enregistrer la note</button></div>';
+  if(!L.length)return h+'<p class="hint">Tes notes apparaîtront ici, de la plus récente à la plus ancienne.</p></div>';
+  h+='<div class="sec-h2"><h4>Mes notes ('+L.length+')</h4></div><input class="in" id="note-q" data-commit="noteq" value="'+esc(ui.draft['note-q']||'')+'" placeholder="Rechercher dans mes notes" autocomplete="off" aria-label="Rechercher">';
+  let last='';
+  if(!F.length)h+='<p class="hint">Aucune note ne contient « '+esc(q)+' ».</p>';
+  F.forEach(n=>{
+    const d=new Date(n.at||0),dk=dstr(d);
+    if(dk!==last){h+='<div class="winmonth">'+esc(dayLong(d))+'</div>';last=dk;}
+    if(ui.noteEdit===n.id){
+      h+='<div class="panel note"><textarea class="in" id="note-e" data-draft="note-e" rows="5" aria-label="Modifier la note">'+esc(dv('note-e',n.text))+'</textarea><div class="btns"><button class="btn primary" data-act="note-edit-ok">Enregistrer</button><button class="btn" data-act="note-edit-cancel">Annuler</button></div></div>';
+    }else{
+      h+='<div class="panel note"><div class="aux">'+hhmm(d)+(n.upd?' · modifiée':'')+'</div><div class="ntx">'+esc(n.text)+'</div><div class="nbt"><button class="link" data-act="note-edit" data-id="'+n.id+'">Modifier</button>'+(ui.confirmDel===n.id?'<button class="btn danger" data-act="note-del-yes" data-id="'+n.id+'">Confirmer la suppression</button>':'<button class="link" data-act="note-del" data-id="'+n.id+'">Supprimer</button>')+'</div></div>';
+    }
+  });
+  h+='<div class="sec-h2"><h4>Télécharger mes notes</h4></div><p class="hint" style="margin:0 0 8px">Toutes les notes ('+L.length+'), classées par date, de la plus ancienne à la plus récente.</p><div class="btns"><button class="btn primary" data-act="note-dl-docx">Word (.docx)</button><button class="btn" data-act="note-dl-txt">Texte (.txt)</button></div></div>';
+  return h;
+}
+function notesTxt(L){
+  let o='MES NOTES\nExporté le '+dayLong(new Date()).toLowerCase()+'\n',last='';
+  L.forEach(n=>{const d=new Date(n.at||0),dk=dstr(d);if(dk!==last){o+='\n== '+dayLong(d)+' ==\n';last=dk;}o+='\n['+hhmm(d)+']\n'+n.text+'\n';});
+  return o;
+}
+const ZENC=new TextEncoder();
+function crc32(b){let t=crc32.t,c,i,k;if(!t){t=crc32.t=[];for(i=0;i<256;i++){c=i;for(k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[i]=c>>>0;}}let r=0xFFFFFFFF;for(i=0;i<b.length;i++)r=t[(r^b[i])&255]^(r>>>8);return (r^0xFFFFFFFF)>>>0;}
+function zipStore(files){
+  const parts=[],cd=[],d=new Date();let off=0;
+  const dt=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),dd=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate();
+  files.forEach(f=>{
+    const nm=ZENC.encode(f.name),dat=ZENC.encode(f.data),crc=crc32(dat);
+    const lh=new DataView(new ArrayBuffer(30));lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);lh.setUint16(6,0x0800,true);lh.setUint16(10,dt,true);lh.setUint16(12,dd,true);lh.setUint32(14,crc,true);lh.setUint32(18,dat.length,true);lh.setUint32(22,dat.length,true);lh.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(lh.buffer),nm,dat);
+    const ch=new DataView(new ArrayBuffer(46));ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);ch.setUint16(12,dt,true);ch.setUint16(14,dd,true);ch.setUint32(16,crc,true);ch.setUint32(20,dat.length,true);ch.setUint32(24,dat.length,true);ch.setUint16(28,nm.length,true);ch.setUint32(42,off,true);
+    cd.push(new Uint8Array(ch.buffer),nm);off+=30+nm.length+dat.length;
+  });
+  let cds=0;cd.forEach(x=>{cds+=x.length;});
+  const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cds,true);e.setUint32(16,off,true);
+  return new Blob(parts.concat(cd,[new Uint8Array(e.buffer)]),{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function notesDocx(L){
+  const X=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const P=(t,st)=>'<w:p>'+(st?'<w:pPr><w:pStyle w:val="'+st+'"/></w:pPr>':'')+(t===''?'':'<w:r><w:t xml:space="preserve">'+X(t)+'</w:t></w:r>')+'</w:p>';
+  let b=P('Mes notes','Title')+P('Exporté le '+dayLong(new Date()).toLowerCase()+' · '+L.length+' note'+(L.length>1?'s':''),'Sub'),last='';
+  L.forEach(n=>{
+    const d=new Date(n.at||0),dk=dstr(d);
+    if(dk!==last){b+=P(dayLong(d),'Heading1');last=dk;}
+    b+=P(hhmm(d),'Time');String(n.text).split(/\r?\n/).forEach(l=>{b+=P(l);});
+  });
+  const W='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  const doc='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document '+W+'><w:body>'+b+'<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>';
+  const sty='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles '+W+'><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="22"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="100" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>'
+   +'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>'
+   +'<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:qFormat/><w:pPr><w:spacing w:after="40"/></w:pPr><w:rPr><w:b/><w:color w:val="1F3A5F"/><w:sz w:val="48"/></w:rPr></w:style>'
+   +'<w:style w:type="paragraph" w:styleId="Sub"><w:name w:val="Sub"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="240"/></w:pPr><w:rPr><w:color w:val="6B6B6B"/><w:sz w:val="20"/></w:rPr></w:style>'
+   +'<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="C9A227"/></w:pBdr><w:spacing w:before="360" w:after="120"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:color w:val="1F3A5F"/><w:sz w:val="28"/></w:rPr></w:style>'
+   +'<w:style w:type="paragraph" w:styleId="Time"><w:name w:val="Time"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="40"/></w:pPr><w:rPr><w:b/><w:color w:val="8A6D1D"/><w:sz w:val="19"/></w:rPr></w:style></w:styles>';
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  const drels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>';
+  return zipStore([{name:'[Content_Types].xml',data:ct},{name:'_rels/.rels',data:rels},{name:'word/document.xml',data:doc},{name:'word/styles.xml',data:sty},{name:'word/_rels/document.xml.rels',data:drels}]);
+}
+async function notesExport(kind){
+  const L=noteList().slice().sort((a,b)=>(a.at||0)-(b.at||0));
+  if(!L.length){toast('Aucune note à télécharger.');return;}
+  if(!dl){toast('Téléchargement indisponible ici.');return;}
+  const st=dstr(new Date());
+  try{
+    if(kind==='docx')await dl.save({filename:'mes-notes-'+st+'.docx',data:notesDocx(L)});
+    else await dl.save({filename:'mes-notes-'+st+'.txt',data:new Blob([notesTxt(L)],{type:'text/plain;charset=utf-8'})});
+    toast('Notes téléchargées.');
+  }catch(e){toast('Téléchargement impossible.');}
+}
+// ---------- journal des reports et abandons ----------
+const TRK={reporte:'Reporté',annule:'Annulé',abandonne:'Abandonné'};
+const trSeen=new Set();
+function trList(){return Object.keys(mem.traces).map(k=>Object.assign({id:k},mem.traces[k])).filter(x=>x&&x.kind);}
+function trLog(o){
+  const key=[o.kind,o.ref||'',o.to||o.from||''].join('|');
+  if(o.src==='agenda'&&(trSeen.has(key)||trList().some(x=>x.kind===o.kind&&x.ref===o.ref&&(x.to||x.from||'')===(o.to||o.from||''))))return;
+  trSeen.add(key);
+  const id='t_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),ex=(o.what||'item')==='item'&&o.ref?exOf(o.ref):null;
+  save('traces',id,{kind:o.kind,what:o.what||'item',ref:o.ref||'',title:o.title||'',from:o.from||'',to:o.to||'',reason:o.reason||(ex&&ex.reason)||'',note:o.note||'',src:o.src||'app',at:Date.now()},'set');
+}
+function trMove(it,np){if(it&&np&&np>it.period)trLog({kind:'reporte',what:'item',ref:it.id,title:it.title,from:it.period,to:np});}
+const traceOf=ref=>trList().filter(x=>x.ref===ref).sort((a,b)=>(a.at||0)-(b.at||0));
+const trCount=ref=>traceOf(ref).filter(x=>x.kind==='reporte').length;
+function trWhen(x){
+  const f=p=>ISO.test(p)?fmtDate(p):p;
+  if(x.kind==='reporte')return 'du '+f(x.from)+' au '+f(x.to);
+  return (x.from?f(x.from)+' · ':'')+(x.kind==='annule'?'annulé':'abandonné');
+}
+function trDiffAgenda(days,hz){
+  const G=window.__GSYNC;if(!G||!G.cfg)return;
+  let sig='';try{sig=JSON.stringify(((G.cfg().cals)||[]).slice().sort());}catch(e){}
+  let last=null;try{last=localStorage.getItem('pdm-gsig');localStorage.setItem('pdm-gsig',sig);}catch(e){}
+  if(last===null||last!==sig)return;
+  const today=dstr(new Date()),end=dstr(addDays(new Date(),hz-1)),prev={},cur={};
+  Object.keys(mem.agenda).forEach(d=>{if(d>=today&&d<=end)((mem.agenda[d]||{}).events||[]).forEach(e=>{if(e.gid){const o=prev[e.gid]=prev[e.gid]||{d:d,t:e.title};if(d<o.d)o.d=d;}});});
+  if(!Object.keys(prev).length)return;
+  Object.keys(days).forEach(d=>{(days[d]||[]).forEach(e=>{if(e.gid){const o=cur[e.gid]=cur[e.gid]||{d:d};if(d<o.d)o.d=d;}});});
+  const gone=[],moved=[];
+  Object.keys(prev).forEach(g=>{if(!cur[g])gone.push(g);else if(cur[g].d>prev[g].d)moved.push(g);});
+  if(gone.length>Math.max(4,Math.floor(Object.keys(prev).length/2)))return;
+  gone.forEach(g=>trLog({kind:'annule',what:'rdv',ref:g,title:prev[g].t,from:prev[g].d,src:'agenda'}));
+  moved.forEach(g=>trLog({kind:'reporte',what:'rdv',ref:g,title:prev[g].t,from:prev[g].d,to:cur[g].d,src:'agenda'}));
+}
+function traceBlock(it){
+  const L=traceOf(it.id);if(!L.length)return '';
+  const n=L.filter(x=>x.kind==='reporte').length;
+  return '<div class="sec-h2"><h4>Historique</h4>'+(n?'<span class="chip warn">Reporté '+n+' fois</span>':'')+'</div><div class="thist">'+L.map(x=>'<div class="th"><div class="aux">'+(x.kind==='reporte'?'Prévu le '+esc(ISO.test(x.from)?fmtDate(x.from):x.from):esc(TRK[x.kind]))+'</div><b>'+(x.kind==='reporte'?'Reporté au '+esc(ISO.test(x.to)?fmtDate(x.to):x.to):esc(TRK[x.kind]+(x.from?' (prévu le '+(ISO.test(x.from)?fmtDate(x.from):x.from)+')':'')))+'</b><select class="in" data-commit="trcreason" data-id="'+x.id+'" aria-label="Motif">'+reasonOpts(x.reason||'').replace('Pourquoi ?','Motif ?')+'</select></div>').join('')+'</div>';
+}
+function traceSynth(t){
+  const lv=ui.trLv||'month',ty=ui.trTy||'all',r=range(lv,keyOf(lv,t));
+  let L=trList().filter(x=>{const d=dstr(new Date(x.at||0));return d>=r[0]&&d<=r[1];});
+  if(ty==='item')L=L.filter(x=>x.what!=='rdv');else if(ty==='rdv')L=L.filter(x=>x.what==='rdv');
+  L.sort((a,b)=>(b.at||0)-(a.at||0));
+  let h='<section class="sec"><div class="sec-h"><h2>'+ico('cycle')+'Reports et abandons</h2><span class="aux">'+L.length+'</span></div>';
+  h+='<div class="seg" style="grid-template-columns:repeat(3,1fr);margin-top:0" role="group" aria-label="Période">'+[['week','Semaine'],['month','Mois'],['quarter','Trimestre']].map(o=>'<button data-act="tr-lv" data-v="'+o[0]+'" aria-pressed="'+(o[0]===lv)+'">'+o[1]+'</button>').join('')+'</div>';
+  h+='<div class="chips" style="margin:10px 0" role="group" aria-label="Type">'+[['all','Tout'],['item','Actions'],['rdv','Rendez-vous']].map(o=>'<button data-act="tr-ty" data-v="'+o[0]+'" aria-pressed="'+(o[0]===ty)+'">'+o[1]+'</button>').join('')+'</div>';
+  if(!L.length)return h+'<div class="panel empty"><p>Aucun report ni abandon sur cette période. Quand tu reportes ou abandonnes une action, ou qu’un rendez-vous est reporté ou annulé, la trace apparaît ici.</p></div></section>';
+  const c={reporte:0,annule:0,abandonne:0};L.forEach(x=>{c[x.kind]=(c[x.kind]||0)+1;});
+  h+='<div class="tk3"><div class="tk w1"><b>'+c.reporte+'</b><span>reporté'+(c.reporte>1?'s':'')+'</span></div><div class="tk w2"><b>'+c.annule+'</b><span>annulé'+(c.annule>1?'s':'')+'</span></div><div class="tk w3"><b>'+c.abandonne+'</b><span>abandonné'+(c.abandonne>1?'s':'')+'</span></div></div>';
+  const rc={};L.forEach(x=>{const k=x.reason||'';rc[k]=(rc[k]||0)+1;});
+  const rk=Object.keys(rc).sort((a,b)=>(a===''?1:b===''?-1:rc[b]-rc[a])),mx=Math.max.apply(null,rk.map(k=>rc[k]));
+  h+='<div class="panel" style="margin-top:10px"><div class="pad"><b>Pourquoi ça glisse</b></div>'+rk.map(k=>'<div class="pad" style="border-top:1px solid var(--line2);padding-block:8px"><div class="qh"><span class="qt">'+esc(k?(REASONL[k]||k):'Sans motif')+'</span><span class="qv">'+rc[k]+'</span></div><span class="bar"><i style="width:'+Math.round(rc[k]/mx*100)+'%'+(k?'':';background:var(--muted)')+'"></i></span></div>').join('')+'</div>';
+  const cnt={};trList().filter(x=>x.kind==='reporte'&&(ty==='all'||(ty==='rdv')===(x.what==='rdv'))).forEach(x=>{const e=cnt[x.ref]=cnt[x.ref]||{n:0,x:x};e.n++;if((x.at||0)>(e.x.at||0))e.x=x;});
+  const top=Object.keys(cnt).filter(k=>cnt[k].n>=2).sort((a,b)=>cnt[b].n-cnt[a].n).slice(0,5);
+  if(top.length)h+='<div class="panel" style="margin-top:10px"><div class="pad"><b>Les plus reportés</b></div>'+top.map(k=>{const it=byId.get(k),par=it&&it.parentId&&byId.get(it.parentId);return '<div class="pad" style="border-top:1px solid var(--line2);padding-block:8px"><div class="qh"><span class="qt">'+esc(cnt[k].x.title)+'</span><span class="chip '+(cnt[k].n>=4?'ko':'warn')+'">'+cnt[k].n+' fois</span></div>'+(par?'<div class="aux">Objectif : '+esc(trunc(par.title,44))+'</div>':'')+'</div>';}).join('')+'</div>';
+  h+='<div class="panel" style="margin-top:10px"><div class="pad"><b>Journal</b></div>'+L.slice(0,10).map(x=>'<div class="pad" style="border-top:1px solid var(--line2);padding-block:8px"><div style="font-weight:600;overflow-wrap:anywhere"><span class="chip '+(x.kind==='reporte'?'warn':x.kind==='annule'?'ko':'')+'" style="margin-right:6px">'+TRK[x.kind]+'</span>'+esc(x.title)+'</div><div class="aux">'+esc(trWhen(x))+(x.reason?' · motif : '+esc((REASONL[x.reason]||x.reason).toLowerCase()):'')+(x.src==='agenda'?' · repéré dans Google Agenda':'')+'</div>'+(x.reason?'':'<select class="in" style="margin-top:6px" data-commit="trcreason" data-id="'+x.id+'" aria-label="Préciser le motif">'+reasonOpts('').replace('Pourquoi ?','Préciser le motif…')+'</select>')+'</div>').join('')+(L.length>10?'<p class="hint" style="padding:0 14px 12px;margin:0">+ '+(L.length-10)+' autres sur la période.</p>':'')+'</div></section>';
+  return h;
+}
 function pendingExcuses(t){
   const today=dstr(t),from=dstr(addDays(t,-14)),out=[];
   items.filter(i=>i.level==='day'&&ISO.test(i.period)&&i.period<today&&i.period>=from&&!i.done&&!i.dropped&&!exOf(i.id)).forEach(i=>out.push({kind:'item',ref:i.id,title:i.title,date:i.period,tag:CATS[i.cat||'tache']||'Tâche',id:i.id}));
@@ -1664,7 +1842,7 @@ function aiRevBlock(lv,key){
 async function exportData(){
   if(!dl)return;
   const out={app:'plan-de-match',format:1,exportedAt:new Date().toISOString()};
-  ['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses'].forEach(c=>{out[c]=mem[c]||{};});
+  ['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses','traces','notes'].forEach(c=>{out[c]=mem[c]||{};});
   try{await dl.save({filename:'plan-de-match-'+dstr(new Date())+'.json',data:JSON.stringify(out,null,1)});toast('Sauvegarde enregistrée.');}
   catch(e){if(!e||e.code!=='declined')toast('Export impossible ici.');}
 }
@@ -1814,6 +1992,7 @@ async function gSync(interactive){
   try{
     const inst=await G.fetch(hz,interactive);
     const r=icsDays(inst,hz);
+    try{trDiffAgenda(r.days,hz);}catch(e){}
     applyAgenda(r.days,hz);
     ui.gMsg='Agenda synchronisé : '+r.total+' rendez-vous sur '+hz+' jours.';ui.gNeeds=false;
   }catch(e){
@@ -1862,7 +2041,7 @@ function syncSection(){
   h+='<p class="hint">Le calendrier Google n’est pas copié : chaque appareil le relit lui-même.</p>';
   return h;
 }
-const IMPC=['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses'];
+const IMPC=['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses','traces','notes'];
 function impBlock(){
   let h='<label class="lab" for="imp-file">Restaurer une sauvegarde (.json)</label><input class="in" type="file" id="imp-file" accept=".json,application/json" data-commit="impfile">';
   const I=ui.imp;
@@ -2056,6 +2235,7 @@ function viewSynth(t){
     h+='<div class="pad"><div class="qh"><span class="qt">'+esc(q.title)+'</span><span class="qv">cible '+fmt(q.target||0)+' '+unitLabel(q.unit)+' par semaine</span></div><div class="mb">'+weeks.map(k=>{const v=(q.values&&q.values[k])||0,r=Math.min(1.2,v/(q.target||1));return '<i class="'+(v>=q.target?'ok':'')+'" style="height:'+Math.max(8,Math.round(r/1.2*100))+'%" title="'+esc(plabel('week',k))+' : '+fmt(v)+'"></i>';}).join('')+'</div></div>';
   });
   h+='</div></div></section>';
+  h+=traceSynth(t);
   h+=excuseSynth(t);
   const rw=winsList().slice(0,3);
   h+='<section class="sec"><div class="sec-h"><h2>Dernières victoires</h2><button class="link" data-act="tab" data-t="victoires">Voir tout</button></div><div class="panel">'+(rw.length?rw.map(winRow).join(''):'<p class="empty-line">Aucune victoire notée pour l’instant.</p>')+'</div></section>';
@@ -2085,6 +2265,7 @@ function sheetProfile(){
    +f('nom','Nom','nom','Ex. Houansou')+f('prenoms','Prénoms','prenoms','Ex. Sèdjro Giovanni')+f('alias','Appellation (comment on t’appelle)','alias','Ex. Gio')+f('fonction','Fonction ou titre','fonction','Ex. Expert associé')
    +'<label class="lab" for="pf-devise">Cap ou devise (affiché en haut)</label><textarea class="in" id="pf-devise" data-commit="pf" data-field="devise" placeholder="La phrase qui te garde sur la route">'+esc(p.devise||'')+'</textarea>'
    +'<div class="sec-h2"><h4>Couleur de l’outil</h4></div><div class="seg" style="grid-template-columns:repeat(2,1fr);margin-top:0" role="group" aria-label="Couleur dominante"><button type="button" data-act="accent" data-v="" aria-pressed="'+(p.accent!=='bordeaux')+'">Bleu</button><button type="button" data-act="accent" data-v="bordeaux" aria-pressed="'+(p.accent==='bordeaux')+'">Rouge bordeaux</button></div>'
+   +'<div class="sec-h2"><h4>Animations</h4></div><div class="seg" style="grid-template-columns:repeat(2,1fr);margin-top:0" role="group" aria-label="Animations"><button type="button" data-act="fx-set" data-v="on" aria-pressed="'+(p.fx!=='off')+'">Activées</button><button type="button" data-act="fx-set" data-v="off" aria-pressed="'+(p.fx==='off')+'">Réduites</button></div><p class="hint" style="margin:6px 0 0">Réduites coupe les effets (confettis, rebonds). Elles se coupent aussi si ton téléphone est réglé sur « Réduire les animations ».</p>'
    +'<div class="sec-h2"><h4>Ma journée de travail</h4></div><p class="hint" style="margin:0 0 8px">Sert à calculer ton temps libre : la plage de la journée moins tes rendez-vous.</p><div class="fgrid"><div><label class="lab" for="pf-ws" style="margin-top:0">Début</label><input class="in" type="time" id="pf-ws" data-commit="pf" data-field="workStart" value="'+esc(p.workStart||'06:00')+'"></div><div><label class="lab" for="pf-we" style="margin-top:0">Fin</label><input class="in" type="time" id="pf-we" data-commit="pf" data-field="workEnd" value="'+esc(p.workEnd||'22:00')+'"></div></div>'
    +'<div class="sec-h2"><h4>Mes données</h4></div><p class="hint" style="margin:0 0 8px">Une copie complète de ton plan (objectifs, actions, budget, victoires, revues) dans un fichier que tu gardes chez toi.</p>'+(dl?'<button class="btn" type="button" data-act="export">Exporter mes données</button>':'<p class="hint">L’export est disponible dans un navigateur compatible ou l’application Claude.</p>')
    +impBlock()+syncSection()
@@ -2132,14 +2313,15 @@ function sheetItem(){
     h+=qualiBlock(it);
   }
   if(idx>0){
-    const up=LEVELS[idx-1],cands=parentCands(lv,it.period),cur=it.parentId;
+    const cands=parentCands(lv,it.period),cur=it.parentId;
     let opts=cands;if(cur&&byId.has(cur)&&!cands.some(c=>c.id===cur))opts=[byId.get(cur)].concat(cands);
-    h+='<label class="lab" for="it-parent">Sert l’objectif '+ABOVE[lv]+'</label><select class="in" id="it-parent" data-commit="parent" data-id="'+it.id+'"><option value="">Aucun, hors objectif</option>'+opts.map(c=>'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+esc(plabel(up,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</select>';
-    if(!opts.length)h+='<p class="hint">Aucun objectif '+ABOVE[lv]+' ne couvre cette période. Crée-le d’abord dans l’onglet Objectifs.</p>';
+    h+='<label class="lab" for="it-parent">Sert l’objectif</label><select class="in" id="it-parent" data-commit="parent" data-id="'+it.id+'"><option value="">Aucun, hors objectif</option>'+parentOpts(opts,cur)+'</select>';
+    h+=opts.length?'<p class="hint">Tu peux rattacher directement à un objectif de l’année, du trimestre ou du mois, sans passer par les niveaux intermédiaires.</p>':'<p class="hint">Aucun objectif ne couvre cette période. Crée-le d’abord dans l’onglet Objectifs.</p>';
   }
   if(lv!=='day'&&lv!=='year'){
     const par=it.parentId&&byId.get(it.parentId);let ks=[];
     if(par&&LEVELS.indexOf(par.level)===idx-1)ks=childKeys(par.level,par.period).slice();
+    else if(par&&LEVELS.indexOf(par.level)<idx-1){const pr=range(par.level,par.period);let k=keyOf(lv,parseD(pr[0])),n=0;while(range(lv,k)[0]<=pr[1]&&n++<80){ks.push(k);k=shiftKey(lv,k,1);}}
     else{const a=lv==='quarter'?[-2,5]:[-3,9];for(let n=a[0];n<=a[1];n++)ks.push(shiftKey(lv,keyOf(lv,new Date()),n));}
     if(ks.indexOf(it.period)<0)ks.push(it.period);
     ks=ks.filter((k,i)=>ks.indexOf(k)===i).sort();
@@ -2157,17 +2339,20 @@ function sheetItem(){
     h+='<div class="sec-h2"><h4>'+(lv==='week'?'Actions':'Déclinaison')+'</h4></div>';
     if(ch.length)h+='<div class="panel">'+ch.map(c=>'<button class="grow" data-act="open" data-id="'+c.id+'"><span class="gt">'+(c.dropped?'<s>'+esc(c.title)+'</s>':esc(c.title))+'</span><span class="pc">'+(c.dropped?'—':Math.round(prog(c)*100)+'%')+'</span><span class="chain">'+esc(plabel(c.level,c.period,true))+'</span></button>').join('')+'</div>';
     else h+='<p class="hint">Rien en dessous pour l’instant.</p>';
-    h+='<div class="btns"><button class="btn" data-act="add-child" data-id="'+it.id+'">+ '+(lv==='week'?'Action':'Sous-objectif')+'</button><button class="btn primary" data-act="decline" data-id="'+it.id+'">Décliner en '+LCHILD[lv]+'</button></div>';
+    h+='<div class="btns"><button class="btn" data-act="add-child" data-id="'+it.id+'">+ '+(lv==='week'?'Action':'Sous-objectif')+'</button>'+(lv==='week'?'':'<button class="btn" data-act="add-action" data-id="'+it.id+'">+ Action directe</button>')+'<button class="btn primary" data-act="decline" data-id="'+it.id+'">Décliner en '+LCHILD[lv]+'</button></div>';
     {
-      const cl=LEVELS[LEVELS.indexOf(lv)+1],ks=childKeys(lv,it.period),thing=lv==='week'?'actions':'sous-objectifs';
-      const per=dv('sub-per',lv==='week'?defaultChildPeriod(it):'*');
+      const cl=LEVELS[LEVELS.indexOf(lv)+1],ks=childKeys(lv,it.period),kind=lv==='week'?'act':dv('sub-kind','sub'),thing=kind==='act'?'actions':'sous-objectifs';
+      const per=dv('sub-per',lv==='week'?defaultChildPeriod(it):'*'),rg=range(lv,it.period),td0=dstr(new Date()),dd=dv('sub-day',td0<rg[0]?rg[0]:td0>rg[1]?rg[1]:td0);
       h+='<div class="sec-h2"><h4>Plusieurs '+thing+' d’un coup</h4></div><p class="hint">Colle ou dicte un paragraphe : je le découpe et j’ajoute chaque phrase directement à cet objectif.</p>';
+      if(lv!=='week')h+='<div class="chips" role="group" aria-label="Type">'+[['sub','Sous-objectifs'],['act','Actions directes']].map(x=>'<button type="button" data-act="sub-kind" data-v="'+x[0]+'" aria-pressed="'+(kind===x[0])+'">'+x[1]+'</button>').join('')+'</div>';
       h+='<div class="mf"><textarea class="in" id="sub-bulk" data-draft="sub-bulk" rows="4" aria-label="Paragraphe à décliner" placeholder="Un '+(lv==='week'?'action':'sous-objectif')+' par ligne, ou un paragraphe.">'+esc(dv('sub-bulk'))+'</textarea>'+micBtn('sub-bulk')+'</div>';
-      h+='<label class="lab" for="sub-per">Période</label><select class="in" id="sub-per" data-draft="sub-per">'+(lv==='week'?'':'<option value="*"'+(per==='*'?' selected':'')+'>Répartir à parts égales sur les '+LCHILD[lv]+'</option>')+ks.map(k=>'<option value="'+k+'"'+(per===k?' selected':'')+'>'+esc(plabel(cl,k))+'</option>').join('')+'</select>';
+      if(lv!=='week'&&kind==='act')h+='<label class="lab" for="sub-day">Jour de l’action</label><input class="in" type="date" id="sub-day" data-draft="sub-day" min="'+rg[0]+'" max="'+rg[1]+'" value="'+esc(dd)+'"><p class="hint">Les actions sont rattachées directement à cet objectif, sans objectif intermédiaire.</p>';
+      else h+='<label class="lab" for="sub-per">Période</label><select class="in" id="sub-per" data-draft="sub-per">'+(lv==='week'?'':'<option value="*"'+(per==='*'?' selected':'')+'>Répartir à parts égales sur les '+LCHILD[lv]+'</option>')+ks.map(k=>'<option value="'+k+'"'+(per===k?' selected':'')+'>'+esc(plabel(cl,k))+'</option>').join('')+'</select>';
       h+='<div class="btns"><button class="btn primary" type="button" data-act="sub-add" data-id="'+it.id+'">Ajouter à cet objectif</button></div>';
     }
   }
   if(lv==='day'&&!it.done)h+=excuseBlock(it);
+  h+=traceBlock(it);
   h+='<div class="btns">';
   if(lv==='day'&&!it.done)h+='<button class="btn" data-act="tomorrow" data-id="'+it.id+'">Reporter à demain</button>';
   h+='<button class="btn" data-act="drop" data-id="'+it.id+'">'+(it.dropped?'Reprendre':'Abandonner')+'</button>';
@@ -2176,14 +2361,13 @@ function sheetItem(){
 }
 function sheetNew(){
   const s=ui.sheet,lv=s.level,idx=LEVELS.indexOf(lv),cands=parentCands(lv,s.period);
-  let par=ui.draft['new-parent'];if(par===undefined)par=s.parent||(cands.length===1?cands[0].id:'');
+  let par=ui.draft['new-parent'];if(par===undefined)par=s.parent||parentDefault(lv,s.period);
   let h=head(lv==='day'?'Nouvelle action':'Nouvel objectif · '+LNAME[lv],'Nouveau');
   h+='<div class="pnav"><button type="button" data-act="np-prev" aria-label="Période précédente">‹</button><div class="pl"><b>'+esc(plabel(lv,s.period))+'</b><small>'+LNAME[lv]+'</small></div><button type="button" data-act="np-next" aria-label="Période suivante">›</button></div>';
   h+='<form data-submit="new"><label class="lab" for="new-title">'+(lv==='day'?'Action':'Objectif')+'</label><div class="mf"><input class="in" id="new-title" data-draft="new-title" value="'+esc(dv('new-title'))+'" autocomplete="off" placeholder="'+(lv==='day'?'Ce que je fais':'Ce que je veux atteindre')+'">'+micBtn('new-title')+'</div>';
   if(idx>0){
-    const up=LEVELS[idx-1];
-    h+='<label class="lab" for="new-parent">Sert l’objectif '+ABOVE[lv]+'</label><select class="in" id="new-parent" data-draft="new-parent"><option value="">Aucun, hors objectif</option>'+cands.map(c=>'<option value="'+c.id+'"'+(c.id===par?' selected':'')+'>'+esc(plabel(up,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</select>';
-    if(!cands.length)h+='<p class="hint">Aucun objectif '+ABOVE[lv]+' ne couvre cette période. Tu peux créer celui-ci hors objectif et le rattacher plus tard.</p>';
+    h+='<label class="lab" for="new-parent">Sert l’objectif</label><select class="in" id="new-parent" data-draft="new-parent"><option value="">Aucun, hors objectif</option>'+parentOpts(cands,par)+'</select>';
+    h+=cands.length?'<p class="hint">Tu peux choisir directement un objectif de l’année, du trimestre ou du mois.</p>':'<p class="hint">Aucun objectif ne couvre cette période. Tu peux créer celui-ci hors objectif et le rattacher plus tard.</p>';
   }
   if(lv==='year')h+='<label class="lab" for="new-domain">Domaine</label><select class="in" id="new-domain" data-draft="new-domain"><option value="">Autre</option>'+getDomains().map(d=>'<option'+(dv('new-domain')===d?' selected':'')+'>'+d+'</option>').join('')+'</select>';
   if(lv==='day'){
@@ -2258,7 +2442,7 @@ function wrapSheet(){
 }
 function sheetHtml(){
   const t=ui.sheet.type;
-  return t==='habit'?sheetHabit():t==='rdv'?sheetRdv():t==='item'?sheetItem():t==='new'?sheetNew():t==='decline'?sheetDecline():t==='profile'?sheetProfile():t==='win'?sheetWin():t==='bud'?sheetBud():t==='models'?sheetModels():t==='agenda'?sheetAgenda():t==='model'?sheetModel():sheetQuotas();
+  return t==='notes'?sheetNotes():t==='habit'?sheetHabit():t==='rdv'?sheetRdv():t==='item'?sheetItem():t==='new'?sheetNew():t==='decline'?sheetDecline():t==='profile'?sheetProfile():t==='win'?sheetWin():t==='bud'?sheetBud():t==='models'?sheetModels():t==='agenda'?sheetAgenda():t==='model'?sheetModel():sheetQuotas();
 }
 
 // ---------- rendu ----------
@@ -2284,7 +2468,60 @@ function headerHtml(t){
 }
 function captureFocus(){const a=document.activeElement;if(a&&a.id&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)){let s=null,e=null;try{s=a.selectionStart;e=a.selectionEnd;}catch(x){}return{id:a.id,s:s,e:e};}return null;}
 function restoreFocus(f){if(!f)return;const el=document.getElementById(f.id);if(!el)return;el.focus({preventScroll:true});try{if(f.s!=null)el.setSelectionRange(f.s,f.e);}catch(x){}}
+
+// ---------- animations ----------
+const fxOff=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches||profile().fx==='off';}catch(e){return false;}};
+function fxCapture(){const m={};document.querySelectorAll('.act .chk[data-id]').forEach(b=>{m[b.dataset.id]=b.closest('.act').getBoundingClientRect().top;});return m;}
+function fxFloat(txt,x,y){
+  const e=document.createElement('div');e.textContent=txt;e.className='fxf';e.style.left=x+'px';e.style.top=y+'px';document.body.appendChild(e);
+  if(e.animate)e.animate([{transform:'translate(-50%,0)',opacity:1},{transform:'translate(-50%,-38px)',opacity:0}],{duration:750,easing:'ease-out'}).onfinish=()=>e.remove();else e.remove();
+}
+function fxConfetti(){
+  const host=document.createElement('div');host.className='fxc';document.body.appendChild(host);
+  const cols=['#0a66c2','#e6a919','#057642','#d92d27','#7a1f3d','#2f84d6'];
+  for(let i=0;i<54;i++){
+    const e=document.createElement('i');e.style.left=(5+Math.random()*90)+'%';e.style.background=cols[i%cols.length];host.appendChild(e);
+    if(e.animate)e.animate([{transform:'translate(0,-12px) rotate(0)',opacity:1},{transform:'translate('+((Math.random()-.5)*160)+'px,'+(window.innerHeight*(.55+Math.random()*.4))+'px) rotate('+(Math.random()*720)+'deg)',opacity:0}],{duration:1200+Math.random()*1100,delay:Math.random()*300,easing:'cubic-bezier(.2,.7,.4,1)',fill:'forwards'});
+  }
+  setTimeout(()=>host.remove(),3000);
+}
+function fxSpark(el){
+  if(!el.animate)return;
+  el.animate([{transform:'scale(.5) rotate(-120deg)'},{transform:'scale(1.35) rotate(15deg)',offset:.7},{transform:'none'}],{duration:600,easing:'cubic-bezier(.2,1.5,.4,1)'});
+  for(let i=0;i<8;i++){const d=document.createElement('i');d.className='fxs';el.appendChild(d);const a=i*Math.PI/4;d.animate([{transform:'translate(-50%,-50%) scale(1)',opacity:1},{transform:'translate(calc(-50% + '+Math.cos(a)*30+'px),calc(-50% + '+Math.sin(a)*30+'px)) scale(0)',opacity:0}],{duration:600,easing:'ease-out'}).onfinish=()=>d.remove();}
+}
+function fxEnter(){
+  const m=document.getElementById('main');if(!m||!m.animate)return;
+  m.querySelectorAll('.bar i').forEach((e,i)=>{const w=e.style.width;if(!w)return;e.animate([{width:'0%'},{width:w}],{duration:900,delay:Math.min(i,8)*110,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});});
+  m.querySelectorAll('.gb').forEach((e,i)=>{e.animate([{transform:'translateY(-50%) scaleX(0)'},{transform:'translateY(-50%) scaleX(1)'}],{duration:800,delay:150+Math.min(i,12)*70,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});});
+  m.querySelectorAll('circle.rfill').forEach(c=>{
+    const to=c.getAttribute('stroke-dashoffset'),from=c.getAttribute('stroke-dasharray');if(to==null||from==null)return;
+    c.animate([{strokeDashoffset:from},{strokeDashoffset:to}],{duration:1100,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});
+    const tx=c.parentNode.querySelector('.rtxt'),mm=tx&&/^(\d+)(.*)$/.exec(tx.textContent);
+    if(mm){const n=+mm[1],suf=mm[2],t0=performance.now();(function st(t){const k=Math.min(1,(t-t0)/1100),e=1-Math.pow(1-k,3);tx.textContent=Math.round(n*e)+suf;if(k<1)requestAnimationFrame(st);})(t0);}
+  });
+}
+function fxAfter(fx,pos){
+  if(fx.check){
+    const c=[...document.querySelectorAll('.act .chk[data-id]')].find(b=>b.dataset.id===fx.check);
+    if(c&&fx.done){const a=c.closest('.act');a.classList.add('fx-pop');setTimeout(()=>a.classList.remove('fx-pop'),900);}
+    if(pos)document.querySelectorAll('.act').forEach(a=>{const k=a.querySelector('.chk[data-id]');if(!k||!(k.dataset.id in pos))return;const dy=pos[k.dataset.id]-a.getBoundingClientRect().top;if(Math.abs(dy)>2&&a.animate)a.animate([{transform:'translateY('+dy+'px)'},{transform:'none'}],{duration:420,delay:fx.done?300:0,easing:'cubic-bezier(.2,.8,.2,1)',fill:'backwards'});});
+    if(fx.confetti)fxConfetti();
+  }
+  if(fx.star){const s=[...document.querySelectorAll('.star[data-id]')].find(b=>b.dataset.id===fx.star&&b.getAttribute('aria-pressed')==='true');if(s)fxSpark(s);}
+  if(fx.bump){
+    const b=fx.bump,btn=[...document.querySelectorAll('[data-act="qplus"]')].find(x=>x.dataset.id===b.id),q=btn&&btn.closest('.quota'),v=q&&q.querySelector('.qv');
+    if(v&&v.animate)v.animate([{transform:'translateY(12px)',opacity:0},{transform:'none',opacity:1}],{duration:320,easing:'cubic-bezier(.2,1.4,.4,1)'});
+    fxFloat('+1',b.x,b.y);
+  }
+  if(fx.hcheck){
+    const h=fx.hcheck,btn=[...document.querySelectorAll('[data-act="hcheck"]')].find(x=>x.dataset.h===h.h&&x.dataset.d===h.d),a=btn&&btn.closest('.act');
+    if(a){a.classList.add('fx-pop');setTimeout(()=>a.classList.remove('fx-pop'),900);const c=a.querySelector('.hchip');if(c&&c.animate)c.animate([{transform:'scale(1)'},{transform:'scale(1.35) rotate(-6deg)',offset:.35},{transform:'scale(1)'}],{duration:650,easing:'ease-out'});}
+    fxFloat('+1',h.x,h.y);
+  }
+}
 function render(){
+  const fx=ui.fx;ui.fx=null;const fpos=fx&&fx.check&&!fxOff()?fxCapture():null;
   const fs=captureFocus(),old=document.querySelector('.sh-body'),st=old?old.scrollTop:0;const gs0=document.querySelector('.gscroll'),gl0=gs0?gs0.scrollLeft:null;takeSnap();
   try{const ac=profile().accent==='bordeaux'?'bordeaux':'';if(ac)document.documentElement.setAttribute('data-accent',ac);else document.documentElement.removeAttribute('data-accent');localStorage.setItem('pdm-accent',ac);const mt=document.querySelector('meta[name=theme-color]');if(mt)mt.content=ac?'#7a1f3d':'#0a66c2';}catch(e){}
   const t=new Date();
@@ -2301,6 +2538,8 @@ function render(){
   const sh=document.querySelector('.sh-body');if(sh&&old)sh.scrollTop=st;
   {const gs=document.querySelector('.gscroll');if(gs){if(ui.gfocus||gl0===null){const mk=gs.querySelector('.gh .td');gs.scrollLeft=mk?Math.max(0,mk.offsetLeft-(gs.clientWidth-gs.querySelector('.gh').offsetLeft)*0.3):0;ui.gfocus=false;}else gs.scrollLeft=gl0;}}
   restoreFocus(fs);
+  document.documentElement.classList.toggle('fx-off',profile().fx==='off');
+  if(ui.status==='ok'){const en=ui.tab!==ui._lt||ui.fxEnter;ui._lt=ui.tab;ui.fxEnter=false;if(!fxOff()){if(en)fxEnter();if(fx)fxAfter(fx,fpos);}}
 }
 
 // ---------- actions ----------
@@ -2317,7 +2556,7 @@ const handlers={
     const st=new Date(e.gst),en=new Date(e.gen),hm=d=>pad(d.getHours())+':'+pad(d.getMinutes());
     const last=new Date(en.getTime()-(e.gall?86400000:1)),multi=dstr(st)!==dstr(last)&&!(e.gall&&dstr(st)===dstr(last));
     ui.rdvMsg='';ui.confirmDel=null;
-    ui.sheet={type:'rdv',gid:e.gid,cal:e.gcal||'primary',f:{title:e.title||'',place:e.place||'',date:dstr(st),s:hm(st),e:e.gall?'10:00':hm(en),allDay:!!e.gall,multi:multi}};render();
+    ui.sheet={type:'rdv',gid:e.gid,cal:e.gcal||'primary',o:{date:dstr(st)},f:{title:e.title||'',place:e.place||'',date:dstr(st),s:hm(st),e:e.gall?'10:00':hm(en),allDay:!!e.gall,multi:multi}};render();
   },
   'rdv-allday':()=>{ui.sheet.f.allDay=!ui.sheet.f.allDay;render();},
   'rdv-auth':()=>{const G=window.__GSYNC;if(!G)return;G.authorize().then(()=>{ui.rdvMsg='';render();toast('Autorisation reçue. Tu peux réessayer.');},e=>{ui.rdvMsg=rdvErr(e);render();});},
@@ -2332,7 +2571,7 @@ const handlers={
     if(!s.gid){spec.note=(f.note||'').trim();spec.rem=f.rem||'default';}
     ui.rdvBusy=true;ui.rdvMsg='';render();
     try{
-      if(s.gid)await G.update(s.cal||'primary',s.gid,spec);else await G.create(spec);
+      if(s.gid){await G.update(s.cal||'primary',s.gid,spec);if(s.o&&s.o.date&&f.date&&f.date>s.o.date)trLog({kind:'reporte',what:'rdv',ref:s.gid,title:f.title.trim(),from:s.o.date,to:f.date});}else await G.create(spec);
       ui.rdvBusy=false;ui.sheet=null;ui.confirmDel=null;
       const far=await rdvRefresh(f.date);
       toast(far?'Ajouté à Google Agenda. Il apparaîtra ici à l’approche de la date.':(s.gid?'Rendez-vous modifié dans Google Agenda.':'Rendez-vous ajouté à Google Agenda.'));
@@ -2342,14 +2581,14 @@ const handlers={
   'rdv-del-yes':async()=>{
     const s=ui.sheet,G=window.__GSYNC;if(!G||!s||!s.gid||ui.rdvBusy)return;
     ui.rdvBusy=true;render();
-    try{await G.remove(s.cal||'primary',s.gid);ui.rdvBusy=false;ui.sheet=null;ui.confirmDel=null;await rdvRefresh('');toast('Rendez-vous supprimé de Google Agenda.');}
+    try{await G.remove(s.cal||'primary',s.gid);trLog({kind:'annule',what:'rdv',ref:s.gid,title:(s.f&&s.f.title)||'Rendez-vous',from:(s.f&&s.f.date)||''});ui.rdvBusy=false;ui.sheet=null;ui.confirmDel=null;await rdvRefresh('');toast('Rendez-vous supprimé de Google Agenda.');}
     catch(e){ui.rdvBusy=false;ui.confirmDel=null;ui.rdvMsg=rdvErr(e);render();}
   },
   accent:b=>{save('profile','me',Object.assign({},profile(),{accent:b.dataset.v==='bordeaux'?'bordeaux':''}),'set');},
   merge:b=>{const g=b.dataset.ids.split(',').map(id=>byId.get(id)).filter(Boolean);if(g.length<2)return;mergeGroup(g);toast('Doublon fusionné.');},
   'merge-all':()=>{const P=planIssues();P.dups.forEach(mergeGroup);toast(P.dups.length+' doublon'+(P.dups.length>1?'s':'')+' fusionné'+(P.dups.length>1?'s':'')+'.');},
   exdays:b=>{ui.exDays=parseInt(b.dataset.v,10)||30;render();},
-  'exc-today':b=>{const it=byId.get(b.dataset.id);if(!it)return;const old=it.period;save('items',it.id,{period:dstr(new Date())},'update');toast('Reporté à aujourd’hui.',{fn:()=>save('items',it.id,{period:old},'update')});},
+  'exc-today':b=>{const it=byId.get(b.dataset.id);if(!it)return;const old=it.period;trMove(it,dstr(new Date()));save('items',it.id,{period:dstr(new Date())},'update');toast('Reporté à aujourd’hui.',{fn:()=>save('items',it.id,{period:old},'update')});},
   'sh-ok':()=>{const d=sheetDirty();ui.sheet=null;ui.confirmDel=null;render();toast(d?'Enregistré.':'Rien à enregistrer.');},
   'sh-cancel':()=>{
     const s=ui.sheet;let d=false;
@@ -2377,7 +2616,7 @@ const handlers={
   hcheck:b=>{
     const hid=b.dataset.h,d=b.dataset.d,k=hkey(hid,d);if(!mem.habits[hid])return;
     if(mem.hlog[k]){const old=mem.hlog[k];save('hlog',k,null,'delete');toast('Décochée.',{fn:()=>save('hlog',k,old,'set')});}
-    else{save('hlog',k,{h:hid,d:d,at:Date.now()},'set');toast('Fait. Bien joué.',{fn:()=>save('hlog',k,null,'delete')});}
+    else{const r=b.getBoundingClientRect();ui.fx={hcheck:{h:hid,d:d,x:r.left+22,y:r.top+10}};save('hlog',k,{h:hid,d:d,at:Date.now()},'set');toast('Fait. Bien joué.',{fn:()=>save('hlog',k,null,'delete')});}
   },
   harch:b=>{save('habits',b.dataset.id,{active:false},'update');ui.sheet=null;render();toast('Habitude archivée.');},
   hreact:b=>{save('habits',b.dataset.id,{active:true},'update');},
@@ -2401,9 +2640,9 @@ const handlers={
     if(!mem.hlog[k])save('hlog',k,{h:hid,d:d,at:Date.now()},'set');
     toast('Validée pour '+dayWord(d)+'.',{fn:()=>save('hlog',k,null,'delete')});
   },
-  toggle:b=>{const it=byId.get(b.dataset.id);if(!it)return;const pd=!!it.done,pa=it.doneAt===undefined?null:it.doneAt;save('items',it.id,{done:!pd,doneAt:!pd?Date.now():null},'update');toast(pd?'Marquée non faite.':'Faite.',{fn:()=>save('items',it.id,{done:pd,doneAt:pa},'update')});},
+  toggle:b=>{const it=byId.get(b.dataset.id);if(!it)return;const pd=!!it.done,pa=it.doneAt===undefined?null:it.doneAt;ui.fx={check:it.id,done:!pd};let all=0;if(!pd&&it.level==='day'&&it.period===dstr(new Date())){const ac=items.filter(x=>x.level==='day'&&x.period===it.period&&!x.dropped);if(ac.length&&ac.every(x=>x.id===it.id||x.done)){ui.fx.confetti=true;all=ac.length;}}save('items',it.id,{done:!pd,doneAt:!pd?Date.now():null},'update');toast(pd?'Marquée non faite.':all?'Journée accomplie : '+all+' action'+(all>1?'s':'')+' faite'+(all>1?'s':'')+'.':'Faite.',{fn:()=>save('items',it.id,{done:pd,doneAt:pa},'update')});},
   lvl:b=>{ui.level=b.dataset.l;render();},
-  'g-zoom':b=>{ui.gz=b.dataset.z;ui.gfocus=true;render();},
+  'g-zoom':b=>{ui.gz=b.dataset.z;ui.gfocus=true;ui.fxEnter=true;render();},
   'g-prev':()=>{const z=ui.gz||'year';ui.gk[z]=shiftKey(z,ui.gk[z],-1);ui.gfocus=true;render();},
   'g-next':()=>{const z=ui.gz||'year';ui.gk[z]=shiftKey(z,ui.gk[z],1);ui.gfocus=true;render();},
   'g-today':()=>{const z=ui.gz||'year';ui.gk[z]=keyOf(z,new Date());ui.gfocus=true;render();},
@@ -2412,12 +2651,26 @@ const handlers={
   next:()=>{ui.keys[ui.level]=shiftKey(ui.level,ui.keys[ui.level],1);render();},
   today:()=>{ui.keys[ui.level]=keyOf(ui.level,new Date());render();},
   new:b=>openNew(b.dataset.l,b.dataset.p),
+  'add-action':b=>{const it=byId.get(b.dataset.id);if(!it)return;const r=range(it.level,it.period),t=dstr(new Date());openNew('day',t<r[0]?r[0]:t>r[1]?r[1]:t,it.id);},
+  'notes-open':()=>{ui.sheet={type:'notes'};ui.confirmDel=null;ui.noteEdit=null;render();setTimeout(()=>{const e=document.getElementById('note-new');if(e)e.focus();},80);},
+  'note-add':()=>{const t=(ui.draft['note-new']||'').trim();if(!t){toast('Écris ou dicte d’abord ta note.');return;}save('notes',newId('n'),{text:t,at:Date.now()},'set');delete ui.draft['note-new'];render();toast('Note enregistrée.');},
+  'note-edit':b=>{const n=mem.notes[b.dataset.id];if(!n)return;ui.noteEdit=b.dataset.id;ui.draft['note-e']=n.text;ui.confirmDel=null;render();},
+  'note-edit-ok':()=>{const t=(ui.draft['note-e']||'').trim();if(!t){toast('Une note ne peut pas être vide.');return;}save('notes',ui.noteEdit,{text:t,upd:Date.now()},'update');ui.noteEdit=null;delete ui.draft['note-e'];render();},
+  'note-edit-cancel':()=>{ui.noteEdit=null;delete ui.draft['note-e'];render();},
+  'note-del':b=>{ui.confirmDel=b.dataset.id;render();},
+  'note-del-yes':b=>{save('notes',b.dataset.id,null,'delete');ui.confirmDel=null;render();toast('Note supprimée.');},
+  'note-dl-docx':()=>{notesExport('docx');},
+  'note-dl-txt':()=>{notesExport('txt');},
+  'fx-set':b=>{save('profile','me',Object.assign({},profile(),{fx:b.dataset.v==='off'?'off':'on'}),'set');},
+  'tr-lv':b=>{ui.trLv=b.dataset.v;render();},
+  'tr-ty':b=>{ui.trTy=b.dataset.v;render();},
+  'sub-kind':b=>{ui.draft['sub-kind']=b.dataset.v;render();},
   'add-child':b=>{const it=byId.get(b.dataset.id);if(!it)return;openNew(LEVELS[LEVELS.indexOf(it.level)+1],defaultChildPeriod(it),it.id);},
   'np-prev':()=>{ui.sheet.period=shiftKey(ui.sheet.level,ui.sheet.period,-1);fixNewParent();render();},
   'np-next':()=>{ui.sheet.period=shiftKey(ui.sheet.level,ui.sheet.period,1);fixNewParent();render();},
   'qa-cat':b=>{ui.qaCat=b.dataset.v;render();},
   'new-cat':b=>{ui.newCat=b.dataset.v;render();},
-  drop:b=>{const it=byId.get(b.dataset.id);if(it)save('items',it.id,{dropped:!it.dropped,dropReason:it.dropped?'':(it.dropReason||'')},'update');},
+  drop:b=>{const it=byId.get(b.dataset.id);if(it&&!it.dropped)trLog({kind:'abandonne',what:'item',ref:it.id,title:it.title,from:ISO.test(it.period)?it.period:'',note:it.period});if(it)save('items',it.id,{dropped:!it.dropped,dropReason:it.dropped?'':(it.dropReason||'')},'update');},
   del:b=>{ui.confirmDel=b.dataset.id;render();},
   'del-yes':b=>{
     const id=b.dataset.id;
@@ -2425,7 +2678,7 @@ const handlers={
     (kids.get(id)||[]).forEach(c=>save('items',c.id,{parentId:''},'update'));
     save('items',id,null,'delete');ui.sheet=null;ui.confirmDel=null;if(!db)render();toast('Supprimé. Les éléments du dessous ne sont plus rattachés.');
   },
-  tomorrow:b=>{const it=byId.get(b.dataset.id);if(!it)return;save('items',it.id,{period:ISO.test(it.period)?dstr(addDays(parseD(it.period),1)):dstr(addDays(new Date(),1))},'update');ui.sheet=null;render();toast('Reporté à demain.');},
+  tomorrow:b=>{const it=byId.get(b.dataset.id);if(!it)return;const np=ISO.test(it.period)?dstr(addDays(parseD(it.period),1)):dstr(addDays(new Date(),1));trMove(it,np);save('items',it.id,{period:np},'update');ui.sheet=null;render();toast('Reporté à demain.');},
   decline:b=>{
     const it=byId.get(b.dataset.id);if(!it)return;const cl=LEVELS[LEVELS.indexOf(it.level)+1];
     Object.keys(ui.draft).forEach(k=>{if(k.indexOf('dec-')===0)delete ui.draft[k];});
@@ -2445,6 +2698,12 @@ const handlers={
     const it=byId.get(b.dataset.id);if(!it)return;
     const lines=splitObjectives(ui.draft['sub-bulk']||'');
     if(!lines.length){toast('Écris ou dicte d’abord ton texte.');return;}
+    if(it.level!=='week'&&ui.draft['sub-kind']==='act'){
+      const rg=range(it.level,it.period),td0=dstr(new Date());let day=ui.draft['sub-day']||(td0<rg[0]?rg[0]:td0>rg[1]?rg[1]:td0);
+      if(!ISO.test(day)||day<rg[0]||day>rg[1]){toast('Choisis un jour dans la période de l’objectif ('+fmtDate(rg[0])+' – '+fmtDate(rg[1])+').');return;}
+      lines.forEach(t=>addItem({title:t,level:'day',period:day,parentId:it.id,domain:it.domain,cat:'tache'}));
+      delete ui.draft['sub-bulk'];render();toast(lines.length+' action'+(lines.length>1?'s':'')+' ajoutée'+(lines.length>1?'s':'')+' directement à cet objectif.');return;
+    }
     const idx=LEVELS.indexOf(it.level),cl=LEVELS[idx+1],ks=childKeys(it.level,it.period);
     if(!cl||!ks.length)return;
     let per=ui.draft['sub-per'];if(per===undefined)per=it.level==='week'?defaultChildPeriod(it):'*';
@@ -2616,7 +2875,7 @@ const handlers={
   },
   tmode:b=>{ui.tMode=b.dataset.v;render();},
   focus:()=>{ui.focus=!ui.focus;try{localStorage.setItem('pdm-focus',ui.focus?'1':'0');}catch(e){}render();},
-  star:b=>{const it=byId.get(b.dataset.id);if(!it)return;if(!it.top){const n=items.filter(x=>x.level==='day'&&x.period===it.period&&!x.dropped&&x.top).length;if(n>=3){toast('Trois essentiels au maximum. Retire une étoile.');return;}}save('items',it.id,{top:!it.top},'update');},
+  star:b=>{const it=byId.get(b.dataset.id);if(!it)return;if(!it.top){const n=items.filter(x=>x.level==='day'&&x.period===it.period&&!x.dropped&&x.top).length;if(n>=3){toast('Trois essentiels au maximum. Retire une étoile.');return;}}if(!it.top)ui.fx={star:it.id};save('items',it.id,{top:!it.top},'update');},
   'p-prev':()=>{ui.pkey=shiftKey('week',ui.pkey,-1);render();},
   'p-next':()=>{ui.pkey=shiftKey('week',ui.pkey,1);render();},
   'p-today':()=>{ui.pkey=weekKey(new Date());render();},
@@ -2637,7 +2896,7 @@ const handlers={
   wdel:b=>{ui.confirmDel='w'+b.dataset.id;render();},
   'wdel-yes':b=>{save('wins',b.dataset.id,null,'delete');ui.sheet=null;ui.confirmDel=null;if(!db)render();toast('Victoire supprimée.');},
   quotas:()=>{ui.sheet={type:'quotas'};ui.confirmDel=null;render();},
-  qplus:b=>qBump(b.dataset.id,1),
+  qplus:b=>{const r=b.getBoundingClientRect();ui.fx={bump:{id:b.dataset.id,x:r.left+r.width/2,y:r.top}};qBump(b.dataset.id,1);},
   qminus:b=>qBump(b.dataset.id,-1),
   qdel:b=>{ui.confirmDel='q'+b.dataset.id;render();},
   'qdel-yes':b=>{save('quotas',b.dataset.id,null,'delete');ui.confirmDel=null;if(!db)render();}
@@ -2669,12 +2928,14 @@ const commits={
   excnote:el=>{const key='x_'+el.dataset.ref,cur=mem.excuses[key];if(!cur){toast('Choisis d’abord une raison.');return;}save('excuses',key,{note:el.value.trim().slice(0,300)},'update');},
   title:el=>{const id=el.dataset.id,v=el.value.trim();delete ui.draft['title:'+id];const it=byId.get(id);if(!v||!it){render();return;}if(it.title!==v)save('items',id,{title:v},'update');else render();},
   parent:el=>save('items',el.dataset.id,{parentId:el.value},'update'),
-  period:el=>{const it=byId.get(el.dataset.id);if(it&&el.value&&el.value!==it.period){save('items',it.id,{period:el.value},'update');toast('Déplacé vers '+plabel(it.level,el.value,true)+'.');}},
+  period:el=>{const it=byId.get(el.dataset.id);if(it&&el.value&&el.value!==it.period){trMove(it,el.value);save('items',it.id,{period:el.value},'update');toast('Déplacé vers '+plabel(it.level,el.value,true)+'.');}},
   domain:el=>save('items',el.dataset.id,{domain:el.value},'update'),
   cat:el=>save('items',el.dataset.id,{cat:el.value},'update'),
   prio:el=>save('items',el.dataset.id,{prio:el.value},'update'),
   dur:el=>{const n=parseInt(el.value,10);save('items',el.dataset.id,{dur:n>0?n:null},'update');},
-  date:el=>{if(/^\d{4}-\d{2}-\d{2}$/.test(el.value)&&+el.value.slice(0,4)>=2000)save('items',el.dataset.id,{period:el.value},'update');},
+  date:el=>{if(/^\d{4}-\d{2}-\d{2}$/.test(el.value)&&+el.value.slice(0,4)>=2000){trMove(byId.get(el.dataset.id),el.value);save('items',el.dataset.id,{period:el.value},'update');}},
+  noteq:el=>{ui.draft['note-q']=el.value;render();setTimeout(()=>{const e=document.getElementById('note-q');if(e){e.focus();const l=e.value.length;try{e.setSelectionRange(l,l);}catch(x){}}},30);},
+  trcreason:el=>{if(mem.traces[el.dataset.id])save('traces',el.dataset.id,{reason:el.value},'update');},
   target:el=>{const n=parseFloat(String(el.value).replace(/\s/g,'').replace(',','.'));save('items',el.dataset.id,{target:n>0?n:null},'update');},
   current:el=>{const n=parseFloat(String(el.value).replace(/\s/g,'').replace(',','.'));save('items',el.dataset.id,{current:n>=0?n:0},'update');},
   unit:el=>save('items',el.dataset.id,{unit:el.value.trim()},'update'),
@@ -2749,7 +3010,7 @@ const submits={
     const s=ui.sheet,title=(ui.draft['new-title']||'').trim();
     if(!title){toast('Donne un intitulé.');return;}
     let par=ui.draft['new-parent'];
-    if(par===undefined){const c=parentCands(s.level,s.period);par=s.parent||(c.length===1?c[0].id:'');}
+    if(par===undefined)par=s.parent||parentDefault(s.level,s.period);
     const id=addItem({title:title,level:s.level,period:s.period,parentId:par,domain:ui.draft['new-domain'],cat:ui.newCat,prio:ui.draft['new-prio'],dur:parseInt(ui.draft['new-dur'],10)||0,target:parseFloat(String(ui.draft['new-target']||'').replace(/\s/g,'').replace(',','.'))||0,unit:(ui.draft['new-unit']||'').trim(),due:ui.draft['new-due']||''});
     if(more===true){['new-title','new-target','new-unit','new-due','new-dur'].forEach(k=>delete ui.draft[k]);render();toast('Ajouté. Tu peux en saisir un autre.');setTimeout(()=>{const e=document.getElementById('new-title');if(e)e.focus();},30);return;}
     Object.keys(ui.draft).forEach(k=>{if(k.indexOf('new-')===0)delete ui.draft[k];});
@@ -2853,7 +3114,7 @@ async function init(){
   try{dl=await use('downloads');}catch(e){dl=null;}
   setupDict();if(dict)render();
   if(!db){ui.status='nodb';render();return;}
-  const colls=['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses'];
+  const colls=['items','quotas','agenda','reviews','profile','wins','budget','revues','models','habits','hlog','excuses','traces','notes'];
   let loaded=0;
   const timer=setTimeout(()=>{if(loaded<colls.length){ui.status='slow';render();}},10000);
   colls.forEach(c=>{
