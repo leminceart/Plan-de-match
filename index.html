@@ -300,6 +300,14 @@ body.lock .nfab{display:none}
 .fulink{display:block;background:none;border:0;padding:0;min-height:0;font-size:15px;color:var(--fg);text-align:left}
 .fuacts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}.fuacts .btn{min-height:40px;padding:0 4px;font-size:13px}
 .chip.late{background:var(--gred);color:#fff}
+.itl,.itr,.itb{min-width:0}
+@media (min-width:900px){
+.sheet.wide{max-width:1040px}
+.it2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto 1fr;column-gap:28px}
+.itl{grid-column:1;grid-row:1}.itb{grid-column:1;grid-row:2}
+.itr{grid-column:2;grid-row:1 / span 2;border-left:1px solid var(--line);padding-left:28px}
+.itr>.sec-h2:first-child,.itr>:first-child{margin-top:0}
+}
 .th .link{justify-self:start;padding:2px 0;min-height:32px}
 .th .ntx{white-space:pre-wrap;overflow-wrap:anywhere;margin:2px 0}
 .fnrow{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:12px 14px;margin-top:8px;min-height:0;font-size:15px;color:var(--fg)}
@@ -805,6 +813,7 @@ function recompute(){
 }
 function prog(i){
   const ms=measures(i);if(ms.length)return ms.reduce((x,y)=>x+y,0)/ms.length;
+  if(i.level==='day')return i.done?1:0;
   const ch=(kids.get(i.id)||[]).filter(c=>!c.dropped);
   if(!ch.length)return i.done?1:0;
   let s=0;ch.forEach(c=>{s+=prog(c);});return s/ch.length;
@@ -936,7 +945,7 @@ function parentOpts(cands,cur){
   let h='';
   LEVELS.slice().reverse().forEach(l=>{
     const g=cands.filter(c=>c.level===l);if(!g.length)return;
-    h+='<optgroup label="'+(l==='year'?'Objectifs de l’année':l==='quarter'?'Objectifs du trimestre':l==='month'?'Objectifs du mois':'Objectifs de la semaine')+'">'+g.map(c=>'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+esc(plabel(l,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</optgroup>';
+    h+='<optgroup label="'+(l==='year'?'Objectifs de l’année':l==='quarter'?'Objectifs du trimestre':l==='month'?'Objectifs du mois':l==='day'?'Tâche d’origine (cette action en est une sous-tâche)':'Objectifs de la semaine')+'">'+g.map(c=>'<option value="'+c.id+'"'+(c.id===cur?' selected':'')+'>'+esc(plabel(l,c.period,true))+' · '+esc(trunc(c.title,48))+'</option>').join('')+'</optgroup>';
   });
   return h;
 }
@@ -970,6 +979,7 @@ function addItem(o){
   const id=newId('i');
   const d={title:o.title.trim(),level:o.level,period:o.period,parentId:o.parentId||'',done:false,dropped:false,order:Date.now(),createdAt:Date.now()};
   if(o.domain)d.domain=o.domain;
+  if(o.extra)Object.assign(d,o.extra);
   if(o.level!=='day'){if(o.target>0){d.target=o.target;d.current=0;if(o.unit)d.unit=o.unit;}if(o.due&&ISO.test(o.due))d.due=o.due;}
   if(o.level==='day'){d.cat=o.cat||'tache';d.prio=o.prio||'normale';if(o.dur)d.dur=o.dur;}
   save('items',id,d,'set');
@@ -1743,8 +1753,8 @@ function suiviBlock(it){
     }else h+='<div class="btns" style="margin-top:8px"><button class="btn" data-act="fn-close-open" data-id="'+it.id+'">Ajouter une note de clôture</button></div>';
   }
   h+='<label class="lab" for="fn-new">Nouvelle note de suivi</label><div class="chips wrapc" role="group" aria-label="Type de note">'+Object.keys(FK).map(k=>'<button type="button" data-act="fn-kind" data-v="'+k+'" aria-pressed="'+(kind===k)+'">'+FK[k]+'</button>').join('')+'</div>';
-  h+='<div class="mf" style="margin-top:8px"><textarea class="in" id="fn-new" data-draft="fn-new" rows="3" placeholder="Où en est-on ? Écris ou dicte…">'+esc(dv('fn-new'))+'</textarea>'+micBtn('fn-new')+'</div>'+'<div id="fu-box">'+fuForm()+'</div><div class="btns"><button class="btn primary" type="button" data-act="fn-add" data-id="'+it.id+'">Ajouter au suivi</button></div>';
-  if(L.length)h+='<div class="thist">'+L.map(x=>'<div class="th"><div class="aux"><span class="chip '+(FKC[x.kind]||'')+'">'+esc(FK[x.kind]||'Note')+'</span> '+esc(fmtTs(x.at))+'</div><div class="ntx">'+esc(x.text)+'</div>'+(x.fu?'<div class="meta">'+fuChip(x.fu)+(x.fu.st==='open'?'<button class="link" data-act="fu-done" data-id="'+x.id+'">Marquer fait</button>':'')+'</div>':'')+(ui.confirmDel===x.id?'<button class="link" style="color:var(--ko)" data-act="fn-del-yes" data-id="'+x.id+'">Confirmer la suppression</button>':'<button class="link" data-act="fn-del" data-id="'+x.id+'">Supprimer</button>')+'</div>').join('')+'</div>';
+  h+='<div class="mf" style="margin-top:8px"><textarea class="in" id="fn-new" data-draft="fn-new" rows="3" placeholder="Où en est-on ? Écris ou dicte…">'+esc(dv('fn-new'))+'</textarea>'+micBtn('fn-new')+'</div>'+'<div id="fu-box">'+fuForm(it)+'</div><div class="btns"><button class="btn primary" type="button" data-act="fn-add" data-id="'+it.id+'">Ajouter au suivi</button></div>';
+  if(L.length)h+='<div class="thist">'+L.map(x=>'<div class="th"><div class="aux"><span class="chip '+(FKC[x.kind]||'')+'">'+esc(FK[x.kind]||'Note')+'</span> '+esc(fmtTs(x.at))+'</div><div class="ntx">'+esc(x.text)+'</div>'+(x.fu?'<div class="meta">'+fuChip(fx(x).fu)+(fx(x).fu.st==='open'?'<button class="link" data-act="fu-done" data-id="'+x.id+'">Marquer fait</button>':'')+'</div>':'')+(ui.confirmDel===x.id?'<button class="link" style="color:var(--ko)" data-act="fn-del-yes" data-id="'+x.id+'">Confirmer la suppression</button>':'<button class="link" data-act="fn-del" data-id="'+x.id+'">Supprimer</button>')+'</div>').join('')+'</div>';
   if(n)h+='<div class="btns"><button class="btn" data-act="fn-dl-item" data-id="'+it.id+'">Télécharger le suivi (Word)</button></div>';
   return h;
 }
@@ -1795,7 +1805,7 @@ function fnBuild(its,w,label){
       b+=P([LNAME[it.level]+' · '+plabel(it.level,it.period),ISTL[st]+(st==='faite'&&it.doneAt?' le '+fmtDate(dstr(new Date(it.doneAt))):''),rp?'reportée '+plr(rp,'fois','fois'):''].filter(Boolean).join(' · '),'Meta');
       const E=fnOf(it.id).filter(x=>inW(x.at||0)).map(x=>({at:x.at||0,f:x})).concat(traceOf(it.id).filter(x=>inW(x.at||0)).map(x=>({at:x.at||0,t:x}))).sort((a,c)=>a.at-c.at);
       E.forEach(e=>{
-        if(e.f){b+=P((FK[e.f.kind]||'Note')+' · '+fmtTs(e.at),'Kind');String(e.f.text).split(/\r?\n/).forEach(l=>{b+=P(l);});if(e.f.fu)b+=P('Action de suivi : '+(FU[e.f.fu.t]||'Suivi')+(e.f.fu.due?' · à revoir le '+fuDue(e.f.fu.due):'')+(e.f.fu.st==='done'?' · traitée':' · à faire'),'Meta');if(e.f.kind==='blocage'||e.f.kind==='decision')dec.push({at:e.at,title:it.title,k:FK[e.f.kind],text:e.f.text});}
+        if(e.f){b+=P((FK[e.f.kind]||'Note')+' · '+fmtTs(e.at),'Kind');String(e.f.text).split(/\r?\n/).forEach(l=>{b+=P(l);});if(e.f.fu){const fe=fx(e.f).fu;b+=P('Prochaine étape : '+(FU[fe.t]||'Suivi')+(fe.due?' · programmée le '+fuDue(fe.due):'')+(fe.st==='done'?' · faite':' · à faire'),'Meta');}if(e.f.kind==='blocage'||e.f.kind==='decision')dec.push({at:e.at,title:it.title,k:FK[e.f.kind],text:e.f.text});}
         else{const x=e.t;b+=P((TRK[x.kind]||'Trace')+' · '+fmtTs(e.at)+' : '+trWhen(x)+(x.reason&&REASONL[x.reason]?' — '+REASONL[x.reason]:''),'Meta');}
       });
       if(cl){b+=P('Note de clôture · '+fmtTs(cl.at),'Kind');if(cl.text)b+=P('Résultat : '+cl.text);if(cl.lesson)b+=P('À retenir : '+cl.lesson);}
@@ -1836,13 +1846,21 @@ function fuParse(text){
 }
 function fuState(text){
   const a=fuParse(text);
-  return {on:ui.fnFu===undefined?!!a.t:!!ui.fnFu,t:ui.fnFuT||a.t||'autre',due:ui.fnFuD!==undefined?ui.fnFuD:a.due,auto:ui.fnFu===undefined&&!!a.t};
+  const tm=dstr(addDays(new Date(),1));
+  return {on:ui.fnFu===undefined?!!a.t:!!ui.fnFu,t:ui.fnFuT||a.t||'autre',due:((ui.fnFuD!==undefined&&ui.fnFuD!=='')?ui.fnFuD:a.due)||tm,auto:ui.fnFu===undefined&&!!a.t};
 }
-function fuReset(){ui.fnFu=undefined;ui.fnFuT=undefined;ui.fnFuD=undefined;}
+function fuReset(){ui.fnFu=undefined;ui.fnFuT=undefined;ui.fnFuD=undefined;delete ui.draft['fn-next'];}
+function nextAuto(text,t,it){const x=String(text||'').trim().replace(/\s+/g,' ');return x&&x.length<=80?x.charAt(0).toUpperCase()+x.slice(1):(FUV[t||'autre']+' : '+(it?it.title:''));}
 const fuDue=d=>ISO.test(d||'')?fmtDate(d):'';
+function fx(n){
+  if(!n||!n.fu)return n;
+  const f=n.fu,sb=f.sub&&byId.get(f.sub);
+  if(!sb)return n;
+  return Object.assign({},n,{fu:Object.assign({},f,{due:ISO.test(sb.period||'')?sb.period:f.due,st:(sb.done||sb.dropped||f.st==='done')?'done':'open'})});
+}
 function fuAll(){
   const out=[];
-  fnList().forEach(n=>{if(n.fu&&n.fu.st==='open'){const it=byId.get(n.item);if(it)out.push({n:n,it:it});}});
+  fnList().forEach(n0=>{const n=fx(n0);if(n.fu&&n.fu.st==='open'){const it=byId.get(n.item);if(it)out.push({n:n,it:it});}});
   return out;
 }
 const fuOpen=ref=>fuAll().filter(x=>x.it.id===ref);
@@ -1852,13 +1870,14 @@ function fuChip(fu){
   const late=fu.due&&fu.due<td;
   return '<span class="chip '+(late?'late':'warn')+'">'+esc(FU[fu.t]||'Suivi')+(fu.due?(late?' · en retard : ':' · à revoir le ')+esc(fuDue(fu.due)):' · sans date')+'</span>';
 }
-function fuForm(){
+function fuForm(it){
   const fs=fuState(dv('fn-new')),dd=n=>dstr(addDays(new Date(),n));
   let h='<label class="fucheck"><input type="checkbox" data-commit="fnfu" '+(fs.on?'checked':'')+'> Action de suivi</label>';
   if(!fs.on)return h;
-  if(fs.auto)h+='<p class="hint" style="margin:0 0 6px">Compris : '+esc(FU[fs.t])+(fs.due?' · à revoir le '+esc(fuDue(fs.due)):' · sans date')+'. Corrige ci-dessous si besoin.</p>';
+  if(fs.auto)h+='<p class="hint" style="margin:0 0 6px">Compris : '+esc(FU[fs.t])+' · à revoir le '+esc(fuDue(fs.due))+'. Corrige ci-dessous si besoin.</p>';
+  {const nx=ui.draft['fn-next']!==undefined?ui.draft['fn-next']:nextAuto(dv('fn-new'),fs.t,it);h+='<label class="lab" for="fn-next" style="margin-top:0">Prochaine étape <span class="aux">(devient une sous-tâche)</span></label><input class="in" id="fn-next" data-draft="fn-next" value="'+esc(nx)+'" autocomplete="off">';}
   h+='<label class="lab" style="margin-top:0">Type</label><div class="chips wrapc" role="group" aria-label="Type d’action de suivi">'+Object.keys(FU).map(k=>'<button type="button" data-act="fn-fut" data-v="'+k+'" aria-pressed="'+(fs.t===k)+'">'+FU[k]+'</button>').join('')+'</div>';
-  h+='<label class="lab">À revoir le</label><div class="chips wrapc" role="group" aria-label="Échéance">'+[['Demain',dd(1)],['Dans 3 jours',dd(3)],['1 semaine',dd(7)],['Sans date','']].map(x=>'<button type="button" data-act="fn-fud" data-v="'+x[1]+'" aria-pressed="'+(fs.due===x[1])+'">'+x[0]+'</button>').join('')+'</div>';
+  h+='<label class="lab">Programmée le</label><div class="chips wrapc" role="group" aria-label="Échéance">'+[['Demain',dd(1)],['Dans 3 jours',dd(3)],['1 semaine',dd(7)]].map(x=>'<button type="button" data-act="fn-fud" data-v="'+x[1]+'" aria-pressed="'+(fs.due===x[1])+'">'+x[0]+'</button>').join('')+'</div>';
   h+='<input class="in" type="date" data-commit="fnfudate" value="'+esc(fs.due||'')+'" aria-label="Date de revue" style="margin-top:8px">';
   return h;
 }
@@ -1875,8 +1894,9 @@ function sheetAsuivre(){
     const G=L.filter(x=>x.n.fu.t===k).sort((a,b)=>(a.n.fu.due||'9999').localeCompare(b.n.fu.due||'9999'));if(!G.length)return;
     h+='<div class="sec-h2"><h4>'+FUP[k]+'</h4><span class="aux">'+G.length+'</span></div>';
     G.forEach(x=>{
-      const n=x.n,planned=n.fu.plan&&byId.has(n.fu.plan)&&!byId.get(n.fu.plan).dropped&&byId.get(n.fu.plan).period===td;
-      h+='<div class="fucard"><button class="fulink" data-act="open" data-id="'+x.it.id+'"><b>'+esc(x.it.title)+'</b></button><div class="aux" style="margin:2px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere">'+esc(trunc(n.text,140))+'</div><div class="meta">'+fuChip(n.fu)+(planned?'<span class="chip am">Dans ta journée</span>':'')+'</div>';
+      const n=x.n,pl0=n.fu.sub||n.fu.plan,planned=pl0&&byId.has(pl0)&&!byId.get(pl0).dropped&&byId.get(pl0).period===td;
+      const sb=n.fu.sub&&byId.get(n.fu.sub);
+      h+='<div class="fucard"><button class="fulink" data-act="open" data-id="'+(sb?sb.id:x.it.id)+'"><b>'+esc(sb?sb.title:x.it.title)+'</b></button>'+(sb?'<div class="aux">Suite de : '+esc(trunc(x.it.title,60))+'</div>':'')+'<div class="aux" style="margin:2px 0 6px;white-space:pre-wrap;overflow-wrap:anywhere">'+esc(trunc(n.text,140))+'</div><div class="meta">'+fuChip(n.fu)+(planned?'<span class="chip am">Dans ta journée</span>':'')+'</div>';
       h+='<div class="fuacts"><button class="btn" data-act="fu-done" data-id="'+n.id+'">Fait</button><button class="btn" data-act="fu-snz" data-id="'+n.id+'" aria-expanded="'+(ui.fuSnz===n.id)+'">Reporter</button><button class="btn" data-act="fu-today" data-id="'+n.id+'"'+(planned?' disabled':'')+'>Dans ma journée</button></div>';
       if(ui.fuSnz===n.id)h+='<div class="chips wrapc" style="margin-top:8px">'+[['Demain',dd(1)],['Dans 3 jours',dd(3)],['1 semaine',dd(7)]].map(y=>'<button type="button" data-act="fu-snz-set" data-id="'+n.id+'" data-v="'+y[1]+'">'+y[0]+'</button>').join('')+'</div><input class="in" type="date" data-commit="fusnzdate" data-id="'+n.id+'" value="'+esc(n.fu.due||'')+'" aria-label="Nouvelle date" style="margin-top:8px">';
       h+='</div>';
@@ -2489,6 +2509,7 @@ function sheetItem(){
   const ch=(kids.get(it.id)||[]).slice().sort(it.level==='week'?((a,b)=>((a.done?1:0)-(b.done?1:0))||ord(a,b)):ord),act=ch.filter(c=>!c.dropped);
   const p=Math.round(prog(it)*100),anc=ancestors(it).reverse();
   let h=head(LNAME[lv]+' · '+plabel(lv,it.period),it.title);
+  h+='<div class="it2"><div class="itl">';
   if(anc.length)h+='<div class="crumbs">'+anc.map(a=>'<button class="crumb" data-act="open" data-id="'+a.id+'"><b>'+LSHORT[a.level]+'</b> '+esc(trunc(a.title,36))+'</button>').join('')+'</div>';
   h+='<label class="lab" for="it-title">Intitulé</label><input class="in" id="it-title" data-draft="title:'+it.id+'" data-commit="title" data-id="'+it.id+'" value="'+esc(dv('title:'+it.id,it.title))+'">';
   const hasT=measures(it).length>0;
@@ -2547,14 +2568,16 @@ function sheetItem(){
       h+='<div class="btns"><button class="btn primary" type="button" data-act="sub-add" data-id="'+it.id+'">Ajouter à cet objectif</button></div>';
     }
   }
-  if(lv==='day'&&!it.done)h+=excuseBlock(it);
-  h+=suiviBlock(it);
-  h+=traceBlock(it);
-  h+='<div class="btns">';
+  if(lv==='day'&&act.length)h+='<div class="sec-h2"><h4>Sous-tâches</h4><span class="aux">'+act.filter(c=>c.done).length+'/'+act.length+' faites</span></div><div class="panel">'+act.map(c=>'<button class="grow" data-act="open" data-id="'+c.id+'"><span class="gt">'+(c.done?'✓ ':'')+esc(c.title)+'</span><span class="pc">'+(ISO.test(c.period||'')?esc(fmtDate(c.period)):'')+'</span></button>').join('')+'</div>';
+  let hr='';
+  if(lv==='day'&&!it.done)hr+=excuseBlock(it);
+  hr+=suiviBlock(it);
+  hr+=traceBlock(it);
+  h+='</div><div class="itr">'+hr+'</div><div class="itb"><div class="btns">';
   if(lv==='day'&&!it.done)h+='<button class="btn" data-act="tomorrow" data-id="'+it.id+'">Reporter à demain</button>';
   h+='<button class="btn" data-act="drop" data-id="'+it.id+'">'+(it.dropped?'Reprendre':'Abandonner')+'</button>';
   h+=ui.confirmDel===it.id?'<button class="btn danger" data-act="del-yes" data-id="'+it.id+'">Confirmer la suppression</button>':'<button class="btn" data-act="del" data-id="'+it.id+'">Supprimer</button>';
-  return h+'</div></div>';
+  return h+'</div></div></div></div>';
 }
 function sheetNew(){
   const s=ui.sheet,lv=s.level,idx=LEVELS.indexOf(lv),cands=parentCands(lv,s.period);
@@ -2629,6 +2652,7 @@ function sheetFoot(){
 }
 function wrapSheet(){
   const sh=document.querySelector('#sheet .sheet');if(!sh||!ui.sheet)return;
+  sh.classList.toggle('wide',ui.sheet.type==='item');
   const hd=sh.querySelector('.sh-h');if(!hd)return;
   const top=document.createElement('div');top.className='sh-top';sh.insertBefore(top,hd);top.appendChild(hd);
   const body=document.createElement('div');body.className='sh-body';
@@ -2853,13 +2877,13 @@ const handlers={
   'asuivre-open':()=>{ui.sheet={type:'notes'};ui.nTab='asuivre';ui.confirmDel=null;ui.noteEdit=null;render();},
   'fn-fut':b=>{ui.fnFuT=b.dataset.v;ui.fnFu=true;render();},
   'fn-fud':b=>{ui.fnFuD=b.dataset.v;ui.fnFu=true;render();},
-  'fu-done':b=>{const n=mem.fnotes[b.dataset.id];if(!n||!n.fu)return;save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{st:'done',doneAt:Date.now()})},'update');toast('Action de suivi traitée.');},
+  'fu-done':b=>{const n=mem.fnotes[b.dataset.id];if(!n||!n.fu)return;if(n.fu.sub&&byId.has(n.fu.sub))save('items',n.fu.sub,{done:true,doneAt:Date.now()},'update');save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{st:'done',doneAt:Date.now()})},'update');toast('Action de suivi traitée.');},
   'fu-snz':b=>{ui.fuSnz=ui.fuSnz===b.dataset.id?null:b.dataset.id;render();},
-  'fu-snz-set':b=>{const n=mem.fnotes[b.dataset.id];if(!n||!n.fu)return;save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{due:b.dataset.v})},'update');ui.fuSnz=null;toast('À revoir le '+fuDue(b.dataset.v)+'.');},
-  'fu-today':b=>{const n=mem.fnotes[b.dataset.id],it=n&&byId.get(n.item);if(!n||!it)return;const id=addItem({title:FUV[n.fu.t||'autre']+' : '+it.title,level:'day',period:dstr(new Date()),parentId:it.level==='day'?(it.parentId||''):it.id,cat:'tache'});save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{plan:id})},'update');toast('Ajouté à ta journée.');},
+  'fu-snz-set':b=>{const n=mem.fnotes[b.dataset.id];if(!n||!n.fu)return;if(n.fu.sub&&byId.has(n.fu.sub))save('items',n.fu.sub,{period:b.dataset.v},'update');save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{due:b.dataset.v})},'update');ui.fuSnz=null;toast('À revoir le '+fuDue(b.dataset.v)+'.');},
+  'fu-today':b=>{const n=mem.fnotes[b.dataset.id],it=n&&byId.get(n.item);if(!n||!it)return;if(n.fu.sub&&byId.has(n.fu.sub)){save('items',n.fu.sub,{period:dstr(new Date())},'update');save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{due:dstr(new Date())})},'update');toast('Sous-tâche ramenée à aujourd’hui.');return;}const id=addItem({title:FUV[n.fu.t||'autre']+' : '+it.title,level:'day',period:dstr(new Date()),parentId:it.level==='day'?(it.parentId||''):it.id,cat:'tache'});save('fnotes',b.dataset.id,{fu:Object.assign({},n.fu,{plan:id})},'update');toast('Ajouté à ta journée.');},
   'n-tab':b=>{ui.nTab=b.dataset.v;render();},
   'fn-kind':b=>{ui.fnKind=b.dataset.v;render();},
-  'fn-add':b=>{const t=(ui.draft['fn-new']||'').trim();if(!t){toast('Écris ou dicte d’abord ta note.');return;}const fs=fuState(t),o={item:b.dataset.id,kind:ui.fnKind||'avancement',text:t,at:Date.now()};if(fs.on)o.fu={t:fs.t,due:fs.due||'',st:'open'};save('fnotes',newId('f'),o,'set');delete ui.draft['fn-new'];fuReset();render();toast(fs.on?'Ajouté au suivi : '+FU[fs.t]+(fs.due?', à revoir le '+fuDue(fs.due)+'.':'.'):'Ajouté au suivi.');},
+  'fn-add':b=>{const t=(ui.draft['fn-new']||'').trim();if(!t){toast('Écris ou dicte d’abord ta note.');return;}const it0=byId.get(b.dataset.id),fs=fuState(t),nid=newId('f'),o={item:b.dataset.id,kind:ui.fnKind||'avancement',text:t,at:Date.now()};let sub=null;if(fs.on&&it0){const nx=((ui.draft['fn-next']!==undefined?ui.draft['fn-next']:'').trim())||nextAuto(t,fs.t,it0);sub=addItem({title:nx,level:'day',period:fs.due,parentId:it0.id,cat:'tache',extra:{fu:fs.t,fuNote:nid}});o.fu={t:fs.t,due:fs.due,st:'open',sub:sub};}save('fnotes',nid,o,'set');delete ui.draft['fn-new'];fuReset();render();toast(sub?'Sous-tâche créée pour le '+fuDue(fs.due)+'.':'Ajouté au suivi.');},
   'fn-del':b=>{ui.confirmDel=b.dataset.id;render();},
   'fn-del-yes':b=>{save('fnotes',b.dataset.id,null,'delete');ui.confirmDel=null;render();toast('Note supprimée.');},
   'fn-close-open':b=>{const c=fnClose(b.dataset.id);ui.fnClosing=b.dataset.id;ui.draft['fc-res']=c?c.text||'':'';ui.draft['fc-less']=c?c.lesson||'':'';render();},
@@ -3155,7 +3179,7 @@ const commits={
   fnq:el=>{ui.draft['fn-q']=el.value;render();setTimeout(()=>{const e=document.getElementById('fn-q');if(e){e.focus();const l=e.value.length;try{e.setSelectionRange(l,l);}catch(x){}}},30);},
   fnfu:el=>{ui.fnFu=!!el.checked;render();},
   fnfudate:el=>{ui.fnFuD=el.value;ui.fnFu=true;render();},
-  fusnzdate:el=>{const n=mem.fnotes[el.dataset.id];if(!n||!n.fu||!el.value)return;save('fnotes',el.dataset.id,{fu:Object.assign({},n.fu,{due:el.value})},'update');ui.fuSnz=null;toast('À revoir le '+fuDue(el.value)+'.');},
+  fusnzdate:el=>{const n=mem.fnotes[el.dataset.id];if(!n||!n.fu||!el.value)return;if(n.fu.sub&&byId.has(n.fu.sub))save('items',n.fu.sub,{period:el.value},'update');save('fnotes',el.dataset.id,{fu:Object.assign({},n.fu,{due:el.value})},'update');ui.fuSnz=null;toast('À revoir le '+fuDue(el.value)+'.');},
   fnfrom:el=>{ui.fnFrom=el.value;render();},
   fnto:el=>{ui.fnTo=el.value;render();},
   noteq:el=>{ui.draft['note-q']=el.value;render();setTimeout(()=>{const e=document.getElementById('note-q');if(e){e.focus();const l=e.value.length;try{e.setSelectionRange(l,l);}catch(x){}}},30);},
@@ -3316,7 +3340,7 @@ document.addEventListener('submit',e=>{const f=e.target.closest('[data-submit]')
 function onField(e){
   const el=e.target;if(!el||!el.dataset)return;
   if(el.dataset.draft!==undefined)ui.draft[el.dataset.draft]=el.value;
-  if(el.dataset.draft==='fn-new'){const fb=document.getElementById('fu-box');if(fb)fb.innerHTML=fuForm();}
+  if(el.dataset.draft==='fn-new'&&e.type==='input'){const fb=document.getElementById('fu-box');if(fb)fb.innerHTML=fuForm(byId.get(ui.sheet&&ui.sheet.id));}
   if(el.dataset.hf!==undefined&&ui.sheet&&ui.sheet.f){ui.sheet.f[el.dataset.hf]=el.value;if(e.type==='change'&&(el.dataset.hf==='times'||el.dataset.hf==='rtime'))render();}
   if(e.type==='change'&&el.dataset.commit&&commits[el.dataset.commit])commits[el.dataset.commit](el);
 }
